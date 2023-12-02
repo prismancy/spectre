@@ -39,13 +39,23 @@ impl Interpreter {
                         Value::Float(x) => Value::Float(-x),
                         _ => unimplemented!(),
                     },
+                    Abs => match value {
+                        Value::Int(x) => Value::Int(x.abs()),
+                        Value::Float(x) => Value::Float(x.abs()),
+                        _ => unimplemented!(),
+                    },
+                    Degree => match value {
+                        Value::Int(x) => Value::Float((x as f64).to_radians()),
+                        Value::Float(x) => Value::Float(x.to_radians()),
+                        _ => unimplemented!(),
+                    },
                     Fact => match value {
                         Value::Int(x) => Value::Int(factorial(x)),
                         Value::Float(x) => Value::Int(factorial(x as i32)),
                         _ => unimplemented!(),
                     },
                     Sqrt => match value {
-                        Value::Int(x) => Value::Int((x as f64).sqrt() as i32),
+                        Value::Int(x) => Value::Float((x as f64).sqrt()),
                         Value::Float(x) => Value::Float(x.sqrt()),
                         _ => unimplemented!(),
                     },
@@ -57,11 +67,6 @@ impl Interpreter {
                     Fort => match value {
                         Value::Int(x) => Value::Int((x as f64).sqrt().sqrt() as i32),
                         Value::Float(x) => Value::Float(x.sqrt().sqrt()),
-                        _ => unimplemented!(),
-                    },
-                    Abs => match value {
-                        Value::Int(x) => Value::Int(x.abs()),
-                        Value::Float(x) => Value::Float(x.abs()),
                         _ => unimplemented!(),
                     },
                 }

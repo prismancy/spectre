@@ -4,11 +4,12 @@ use std::fmt;
 pub enum UnaryOp {
     Pos,
     Neg,
-    Fact,
+    Abs,
+    Degree,
     Sqrt,
     Cbrt,
     Fort,
-    Abs,
+    Fact,
 }
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BinaryOp {
@@ -43,11 +44,12 @@ impl fmt::Display for Node {
                 match op {
                     Pos => write!(f, "(+{})", node),
                     Neg => write!(f, "(-{})", node),
+                    Abs => write!(f, "|{}|", node),
+                    Degree => write!(f, "({}°)", node),
                     Fact => write!(f, "({}!)", node),
                     Sqrt => write!(f, "(√{})", node),
                     Cbrt => write!(f, "(∛{})", node),
                     Fort => write!(f, "(∜{})", node),
-                    Abs => write!(f, "|{}|", node),
                 }
             }
             Node::Binary(left, op, right) => {

@@ -75,6 +75,10 @@ impl Lexer {
                     self.advance();
                     Exclamation
                 }
+                '°' => {
+                    self.advance();
+                    Degree
+                }
                 '√' => {
                     self.advance();
                     Sqrt

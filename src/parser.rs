@@ -180,6 +180,10 @@ impl Parser {
                 self.advance();
                 Node::Unary(UnaryOp::Fact, Box::new(result))
             }
+            Degree => {
+                self.advance();
+                Node::Unary(UnaryOp::Degree, Box::new(result))
+            }
             _ => result,
         }
     }
