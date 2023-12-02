@@ -39,6 +39,26 @@ impl Interpreter {
                         Value::Float(x) => Value::Float(-x),
                         _ => unimplemented!(),
                     },
+                    Fact => match value {
+                        Value::Int(x) => Value::Int(factorial(x)),
+                        Value::Float(x) => Value::Int(factorial(x as i32)),
+                        _ => unimplemented!(),
+                    },
+                    Sqrt => match value {
+                        Value::Int(x) => Value::Int((x as f64).sqrt() as i32),
+                        Value::Float(x) => Value::Float(x.sqrt()),
+                        _ => unimplemented!(),
+                    },
+                    Cbrt => match value {
+                        Value::Int(x) => Value::Int((x as f64).cbrt() as i32),
+                        Value::Float(x) => Value::Float(x.cbrt()),
+                        _ => unimplemented!(),
+                    },
+                    Fort => match value {
+                        Value::Int(x) => Value::Int((x as f64).sqrt().sqrt() as i32),
+                        Value::Float(x) => Value::Float(x.sqrt().sqrt()),
+                        _ => unimplemented!(),
+                    },
                 }
             }
             Node::Binary(left, op, right) => {
@@ -149,4 +169,12 @@ impl Interpreter {
             _ => unimplemented!(),
         }
     }
+}
+
+fn factorial(n: i32) -> i32 {
+    let mut product = 1;
+    for i in 1..=n {
+        product *= i;
+    }
+    product
 }

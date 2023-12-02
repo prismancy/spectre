@@ -49,27 +49,43 @@ impl Lexer {
                 }
                 '+' => {
                     self.advance();
-                    Add
+                    Plus
                 }
                 '-' => {
                     self.advance();
-                    Sub
+                    Minus
                 }
-                '*' => {
+                '*' | '∙' | '×' => {
                     self.advance();
-                    Mul
+                    Star
                 }
                 '/' => {
                     self.advance();
-                    Div
+                    Slash
                 }
                 '%' => {
                     self.advance();
-                    Rem
+                    Percent
                 }
                 '^' => {
                     self.advance();
-                    Pow
+                    Carrot
+                }
+                '!' => {
+                    self.advance();
+                    Exclamation
+                }
+                '√' => {
+                    self.advance();
+                    Sqrt
+                }
+                '∛' => {
+                    self.advance();
+                    Cbrt
+                }
+                '∜' => {
+                    self.advance();
+                    Fort
                 }
                 '(' => {
                     self.advance();

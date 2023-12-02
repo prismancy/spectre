@@ -96,11 +96,11 @@ impl Parser {
         let result = self.term();
 
         match self.token {
-            Add => {
+            Plus => {
                 self.advance();
                 Node::Binary(Box::new(result), BinaryOp::Add, Box::new(self.arith_expr()))
             }
-            Sub => {
+            Minus => {
                 self.advance();
                 Node::Binary(Box::new(result), BinaryOp::Sub, Box::new(self.arith_expr()))
             }
@@ -112,15 +112,15 @@ impl Parser {
         let result = self.factor();
 
         match self.token {
-            Mul => {
+            Star => {
                 self.advance();
                 Node::Binary(Box::new(result), BinaryOp::Mul, Box::new(self.term()))
             }
-            Div => {
+            Slash => {
                 self.advance();
                 Node::Binary(Box::new(result), BinaryOp::Div, Box::new(self.term()))
             }
-            Rem => {
+            Percent => {
                 self.advance();
                 Node::Binary(Box::new(result), BinaryOp::Rem, Box::new(self.term()))
             }
@@ -130,15 +130,57 @@ impl Parser {
 
     fn factor(&mut self) -> Node {
         match self.token {
-            Add => {
+            Plus => {
                 self.advance();
                 Node::Unary(UnaryOp::Pos, Box::new(self.factor()))
             }
-            Sub => {
+            Minus => {
                 self.advance();
                 Node::Unary(UnaryOp::Neg, Box::new(self.factor()))
             }
-            _ => self.call(),
+            _ => self.power(),
+        }
+    }
+
+    fn power(&mut self) -> Node {
+        let result = self.prefix();
+
+        match self.token {
+            Carrot => {
+                self.advance();
+                Node::Binary(Box::new(result), BinaryOp::Pow, Box::new(self.factor()))
+            }
+            _ => result,
+        }
+    }
+
+    fn prefix(&mut self) -> Node {
+        match self.token {
+            Sqrt => {
+                self.advance();
+                Node::Unary(UnaryOp::Sqrt, Box::new(self.prefix()))
+            }
+            Cbrt => {
+                self.advance();
+                Node::Unary(UnaryOp::Cbrt, Box::new(self.prefix()))
+            }
+            Fort => {
+                self.advance();
+                Node::Unary(UnaryOp::Fort, Box::new(self.prefix()))
+            }
+            _ => self.postfix(),
+        }
+    }
+
+    fn postfix(&mut self) -> Node {
+        let result = self.call();
+
+        match self.token {
+            Exclamation => {
+                self.advance();
+                Node::Unary(UnaryOp::Fact, Box::new(result))
+            }
+            _ => result,
         }
     }
 

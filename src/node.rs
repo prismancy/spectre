@@ -4,6 +4,10 @@ use std::fmt;
 pub enum UnaryOp {
     Pos,
     Neg,
+    Fact,
+    Sqrt,
+    Cbrt,
+    Fort,
 }
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BinaryOp {
@@ -31,13 +35,17 @@ impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Node::Int(x) => write!(f, "{}", x),
-            Node::Float(x) => write!(f, "{}f", x),
+            Node::Float(x) => write!(f, "{}", x),
             Node::Identifier(name) => write!(f, "{}", name),
             Node::Unary(op, node) => {
                 use UnaryOp::*;
                 match op {
                     Pos => write!(f, "(+{})", node),
                     Neg => write!(f, "(-{})", node),
+                    Fact => write!(f, "({}!)", node),
+                    Sqrt => write!(f, "(√{})", node),
+                    Cbrt => write!(f, "(∛{})", node),
+                    Fort => write!(f, "(∜{})", node),
                 }
             }
             Node::Binary(left, op, right) => {
