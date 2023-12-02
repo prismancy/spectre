@@ -44,6 +44,16 @@ impl Interpreter {
                         Value::Float(x) => Value::Float(x.abs()),
                         _ => unimplemented!(),
                     },
+                    Floor => match value {
+                        Value::Int(x) => Value::Int(x),
+                        Value::Float(x) => Value::Int(x.floor() as i32),
+                        _ => unimplemented!(),
+                    },
+                    Ceil => match value {
+                        Value::Int(x) => Value::Int(x),
+                        Value::Float(x) => Value::Int(x.ceil() as i32),
+                        _ => unimplemented!(),
+                    },
                     Degree => match value {
                         Value::Int(x) => Value::Float((x as f64).to_radians()),
                         Value::Float(x) => Value::Float(x.to_radians()),

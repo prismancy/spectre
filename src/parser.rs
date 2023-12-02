@@ -226,7 +226,7 @@ impl Parser {
                 let result = self.expr();
 
                 if self.token != RParen {
-                    panic!("expected ')'");
+                    panic!("expected {}", RParen);
                 }
                 self.advance();
 
@@ -237,14 +237,39 @@ impl Parser {
                 let result = self.expr();
 
                 if self.token != Pipe {
-                    panic!("expected '|'");
+                    panic!("expected {}", Pipe);
+                }
+                self.advance();
+
+                Node::Unary(UnaryOp::Abs, Box::new(result))
+            }
+            LFloor => {
+                self.advance();
+                let result = self.expr();
+
+                if self.token != RFloor {
+                    panic!("expected {}", RFloor);
+                }
+                self.advance();
+
+                Node::Unary(UnaryOp::Abs, Box::new(result))
+            }
+            LCeil => {
+                self.advance();
+                let result = self.expr();
+
+                if self.token != RCeil {
+                    panic!("expected {}", RCeil);
                 }
                 self.advance();
 
                 Node::Unary(UnaryOp::Abs, Box::new(result))
             }
             EOF => Node::EOF,
-            _ => panic!("expected int, float, identifier, or '('"),
+            _ => panic!(
+                "expected int, float, identifier, {}, {}, {}, or {}",
+                LParen, Pipe, LFloor, LCeil
+            ),
         }
     }
 
@@ -256,12 +281,12 @@ impl Parser {
             match &self.token {
                 Comma => self.advance(),
                 t if *t == end => {}
-                _ => panic!("expected ',' or '{}'", end),
+                _ => panic!("expected {} or {}", Comma, end),
             };
         }
 
         if self.token != end {
-            panic!("expected '{}'", end);
+            panic!("expected {}", end);
         }
         self.advance();
 

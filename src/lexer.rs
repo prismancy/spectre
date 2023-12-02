@@ -103,6 +103,22 @@ impl Lexer {
                     self.advance();
                     Pipe
                 }
+                '⌊' => {
+                    self.advance();
+                    LFloor
+                }
+                '⌋' => {
+                    self.advance();
+                    RFloor
+                }
+                '⌈' => {
+                    self.advance();
+                    LCeil
+                }
+                '⌉' => {
+                    self.advance();
+                    RCeil
+                }
                 ',' => {
                     self.advance();
                     Comma
