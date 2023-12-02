@@ -1,82 +1,136 @@
-use std::{iter::Peekable, str::Chars};
+use crate::Token;
+use Token::*;
 
-pub use crate::token::Token;
-
-pub struct Lexer<'a> {
-    /// Source code string
-    input: Peekable<Chars<'a>>,
-    /// Current position in `input` (points to current char)
-    // position: usize,
-    /// Current reading position in `input` (after current char)
-    // read_position: usize,
-
-    /// Current char under examination
-    ch: char,
+pub struct Lexer {
+    text: String,
+    index: usize,
+    current_char: char,
 }
 
-impl Default for Lexer<'_> {
-    fn default() -> Self {
+impl Lexer {
+    pub fn new(text: String) -> Self {
         Self {
-            input: "".chars().peekable(),
-            // position: Default::default(),
-            // read_position: Default::default(),
-            ch: Default::default(),
+            index: 0,
+            current_char: text.chars().nth(0).unwrap(),
+            text,
         }
     }
-}
 
-impl<'a> Lexer<'a> {
-    pub fn new(input: &'a str) -> Self {
-        let mut lexer = Self {
-            input: input.chars().peekable(),
-            ..Default::default()
+    fn advance(&mut self) -> Token {
+        self.index += 1;
+        let next = self.text.chars().nth(self.index);
+        self.current_char = match next {
+            Some(c) => c,
+            _ => '\0',
         };
-        lexer.read_char();
-        lexer
-    }
-}
-
-impl Lexer<'_> {
-    fn read_char(&mut self) {
-        self.ch = match self.input.peek() {
-            Some(ch) => *ch,
-            None => '\0',
-        };
-
-        self.input.next();
+        EOF
     }
 
-    fn peek_char(&mut self) -> char {
-        match self.input.peek() {
-            Some(ch) => *ch,
-            None => '\0',
+    pub fn lex(&mut self) -> Vec<Token> {
+        let mut tokens: Vec<Token> = vec![];
+        let mut token = self.next_token();
+        while token != EOF {
+            tokens.push(token);
+            token = self.next_token();
         }
-    }
-
-    fn skip_whitespace(&mut self) {
-        while let ' ' | '\t' | '\n' | '\r' = self.ch {
-            self.read_char();
-        }
+        tokens.push(token);
+        tokens
     }
 
     pub fn next_token(&mut self) -> Token {
-        self.skip_whitespace();
-        let token = match self.ch {
-            '0'..='9' => {
-                return Token::from(self.number());
+        while self.current_char != '\0' {
+            let token = match self.current_char {
+                ' ' | '\t' | '\r' => self.advance(),
+                '0'..='9' => self.number(),
+                'a'..='z' | 'A'..='Z' | '_' | 'Α'..='ω' | '∞' => self.word(),
+                '=' => {
+                    self.advance();
+                    Eq
+                }
+                '+' => {
+                    self.advance();
+                    Add
+                }
+                '-' => {
+                    self.advance();
+                    Sub
+                }
+                '*' => {
+                    self.advance();
+                    Mul
+                }
+                '/' => {
+                    self.advance();
+                    Div
+                }
+                '%' => {
+                    self.advance();
+                    Rem
+                }
+                '^' => {
+                    self.advance();
+                    Pow
+                }
+                '(' => {
+                    self.advance();
+                    LParen
+                }
+                ')' => {
+                    self.advance();
+                    RParen
+                }
+                ',' => {
+                    self.advance();
+                    Comma
+                }
+                '\n' | ';' => {
+                    self.advance();
+                    Newline
+                }
+                '\0' => EOF,
+                _ => panic!("Illegal character: '{}'", self.current_char),
+            };
+            if token != EOF {
+                return token;
             }
-            _ => Token::from(self.ch),
-        };
-        self.read_char();
-        token
+        }
+        EOF
     }
 
-    fn number(&mut self) -> String {
-        let mut number = String::new();
-        while let '0'..='9' = self.ch {
-            number.push(self.ch);
-            self.read_char();
+    fn number(&mut self) -> Token {
+        let mut num_str: String = self.current_char.to_string();
+        let mut decimals = 0;
+        self.advance();
+
+        while "0123456789.".contains(self.current_char) {
+            if self.current_char == '.' {
+                decimals += 1;
+            }
+            num_str.push(self.current_char);
+            self.advance();
         }
-        number
+
+        if decimals > 0 {
+            Float(num_str.parse::<f64>().unwrap())
+        } else {
+            Int(num_str.parse::<i32>().unwrap())
+        }
+    }
+
+    fn word(&mut self) -> Token {
+        let mut word: String = self.current_char.to_string();
+        self.advance();
+
+        while self.current_char != '\0' {
+            match self.current_char {
+                'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | 'Α'..='ω' | '∞' => {
+                    word.push(self.current_char);
+                    self.advance();
+                }
+                _ => break,
+            };
+        }
+
+        Identifier(word)
     }
 }

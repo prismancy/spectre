@@ -1,21 +1,22 @@
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    Int(String),
-    Float(String),
-
-    Plus,
-    Minus,
-    Asterisk,
-    Slash,
-    Carrot,
-
+    Int(i32),
+    Float(f64),
+    Identifier(String),
+    Eq,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Rem,
+    Pow,
     LParen,
     RParen,
-
-    Eof,
-    Illegal,
+    Comma,
+    Newline,
+    EOF,
 }
 
 impl fmt::Display for Token {
@@ -24,50 +25,19 @@ impl fmt::Display for Token {
         match self {
             Int(value) => write!(f, "{}", value),
             Float(value) => write!(f, "{}f", value),
-
-            Plus => write!(f, "'+'"),
-            Minus => write!(f, "'-'"),
-            Asterisk => write!(f, "'*'"),
-            Slash => write!(f, "'/'"),
-            Carrot => write!(f, "'^'"),
-
+            Identifier(name) => write!(f, "{}", name),
+            Eq => write!(f, "'='"),
+            Add => write!(f, "'+'"),
+            Sub => write!(f, "'-'"),
+            Mul => write!(f, "'*'"),
+            Div => write!(f, "'/'"),
+            Rem => write!(f, "'%'"),
+            Pow => write!(f, "'^'"),
             LParen => write!(f, "'('"),
             RParen => write!(f, "')'"),
-
-            Eof => write!(f, "<eof>"),
-            Illegal => write!(f, "<illegal>"),
-        }
-    }
-}
-
-impl From<char> for Token {
-    fn from(ch: char) -> Self {
-        match ch {
-            '+' => Self::Plus,
-            '-' => Self::Minus,
-            '(' => Self::LParen,
-            ')' => Self::RParen,
-            '/' => Self::Slash,
-            '*' => Self::Asterisk,
-            '^' => Self::Carrot,
-            '(' => Self::LParen,
-            ')' => Self::RParen,
-            '\0' => Self::Eof,
-            _ => Self::Illegal,
-        }
-    }
-}
-
-impl From<String> for Token {
-    fn from(value: String) -> Self {
-        if value.chars().all(|b| b.is_ascii_digit()) {
-            if value.contains('.') {
-                Self::Float(value)
-            } else {
-                Self::Int(value)
-            }
-        } else {
-            Self::Int(value)
+            Comma => write!(f, "','"),
+            Newline => write!(f, "'\\n'"),
+            EOF => write!(f, "<eof>"),
         }
     }
 }

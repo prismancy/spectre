@@ -1,13 +1,18 @@
-use lexer::{Lexer, Token};
 use std::io::{self, Write};
 
+mod interpreter;
 mod lexer;
+mod node;
+mod parser;
 mod token;
 
-fn main() {
-    println!("Hello! This is the Monkey programming language!");
-    println!("Feel free to type in commands...");
+pub use interpreter::*;
+pub use lexer::*;
+pub use node::*;
+pub use parser::*;
+pub use token::*;
 
+fn main() {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
 
@@ -25,14 +30,14 @@ fn main() {
             return;
         }
 
-        let mut lexer = Lexer::new(&input);
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.lex();
 
-        loop {
-            let token = lexer.next_token();
-            if token == Token::Eof {
-                break;
-            }
-            writeln!(&stdout, "{token:?}").expect("Token should be written successfully!");
-        }
+        let mut parser = Parser::new(tokens);
+        let ast = parser.parse();
+
+        let mut interpreter = Interpreter::default();
+        let value = interpreter.run(ast);
+        println!("{}", value)
     }
 }
