@@ -16,6 +16,8 @@ fn main() {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
 
+    let mut interpreter = Interpreter::default();
+
     loop {
         write!(&stdout, "> ").expect("PROMPT string should be written successfully!");
 
@@ -36,7 +38,6 @@ fn main() {
         let mut parser = Parser::new(tokens);
         let ast = parser.parse();
 
-        let mut interpreter = Interpreter::default();
         let value = interpreter.run(ast);
         println!("{}", value)
     }
