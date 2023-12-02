@@ -34,9 +34,14 @@ fn main() {
 
         let mut lexer = Lexer::new(input);
         let tokens = lexer.lex();
+        println!("{:?}", tokens);
+        if tokens[0] == Token::EOF {
+            continue;
+        }
 
         let mut parser = Parser::new(tokens);
         let ast = parser.parse();
+        println!("{}", ast);
 
         let value = interpreter.run(ast);
         println!("{}", value)

@@ -164,5 +164,82 @@ impl Interpreter {
                 }
             }),
         );
+        self.add_var(
+            "gcd",
+            Value::Function(|args| {
+                if args.len() != 2 {
+                    panic!("gcd expects 2 arguments, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Int(a) => match args[1] {
+                        Value::Int(b) => Value::Int(gcd(a, b)),
+                        _ => panic!("gcd expects 2 integers"),
+                    },
+                    _ => panic!("gcd expects 2 integers"),
+                }
+            }),
+        );
+        self.add_var(
+            "lcm",
+            Value::Function(|args| {
+                if args.len() != 2 {
+                    panic!("lcm expects 2 arguments, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Int(a) => match args[1] {
+                        Value::Int(b) => Value::Int(a * b / gcd(a, b)),
+                        _ => panic!("lcm expects 2 integers"),
+                    },
+                    _ => panic!("lcm expects 2 integers"),
+                }
+            }),
+        );
+        self.add_var(
+            "min",
+            Value::Function(|args| {
+                if args.len() != 2 {
+                    panic!("min expects 2 arguments, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Int(a) => match args[1] {
+                        Value::Int(b) => Value::Int(a.min(b)),
+                        _ => panic!("min expects 2 integers"),
+                    },
+                    Value::Float(a) => match args[1] {
+                        Value::Float(b) => Value::Float(a.min(b)),
+                        _ => panic!("min expects 2 floats"),
+                    },
+                    _ => panic!("min expects 2 numbers"),
+                }
+            }),
+        );
+        self.add_var(
+            "max",
+            Value::Function(|args| {
+                if args.len() != 2 {
+                    panic!("max expects 2 arguments, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Int(a) => match args[1] {
+                        Value::Int(b) => Value::Int(a.max(b)),
+                        _ => panic!("max expects 2 integers"),
+                    },
+                    Value::Float(a) => match args[1] {
+                        Value::Float(b) => Value::Float(a.max(b)),
+                        _ => panic!("max expects 2 floats"),
+                    },
+                    _ => panic!("max expects 2 numbers"),
+                }
+            }),
+        );
     }
+}
+
+fn gcd(mut a: i32, mut b: i32) -> i32 {
+    while b != 0 {
+        let t = b;
+        b = a % b;
+        a = t;
+    }
+    a
 }

@@ -186,7 +186,7 @@ impl Interpreter {
                 }
                 rtn_value
             }
-            _ => unimplemented!(),
+            Node::EOF => Value::Int(0),
         }
     }
 }

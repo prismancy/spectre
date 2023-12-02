@@ -112,11 +112,11 @@ impl Parser {
         let result = self.factor();
 
         match self.token {
-            Star => {
+            Star | Dot | Cross => {
                 self.advance();
                 Node::Binary(Box::new(result), BinaryOp::Mul, Box::new(self.term()))
             }
-            Slash => {
+            Slash | Divide => {
                 self.advance();
                 Node::Binary(Box::new(result), BinaryOp::Div, Box::new(self.term()))
             }
@@ -192,12 +192,12 @@ impl Parser {
         let result = self.atom();
 
         match self.token {
-            LParen => {
+            LeftParen => {
                 self.advance();
 
                 match result {
                     Node::Identifier(name) => {
-                        let args = self.list(RParen);
+                        let args = self.list(RightParen);
                         Node::Call(name, args)
                     }
                     _ => panic!("expected identifier"),
@@ -221,12 +221,12 @@ impl Parser {
                 self.advance();
                 Node::Identifier(name)
             }
-            LParen => {
+            LeftParen => {
                 self.advance();
                 let result = self.expr();
 
-                if self.token != RParen {
-                    panic!("expected {}", RParen);
+                if self.token != RightParen {
+                    panic!("expected {}", RightParen);
                 }
                 self.advance();
 
@@ -243,32 +243,37 @@ impl Parser {
 
                 Node::Unary(UnaryOp::Abs, Box::new(result))
             }
-            LFloor => {
+            LeftFloor => {
                 self.advance();
                 let result = self.expr();
 
-                if self.token != RFloor {
-                    panic!("expected {}", RFloor);
+                match self.token {
+                    RightFloor => {
+                        self.advance();
+                        Node::Unary(UnaryOp::Floor, Box::new(result))
+                    }
+                    RightCeil => {
+                        self.advance();
+                        Node::Unary(UnaryOp::Abs, Box::new(result))
+                    }
+                    _ => panic!("expected {} or {}", RightFloor, RightCeil),
                 }
-                self.advance();
-
-                Node::Unary(UnaryOp::Abs, Box::new(result))
             }
-            LCeil => {
+            LeftCeil => {
                 self.advance();
                 let result = self.expr();
 
-                if self.token != RCeil {
-                    panic!("expected {}", RCeil);
+                if self.token != RightCeil {
+                    panic!("expected {}", RightCeil);
                 }
                 self.advance();
 
-                Node::Unary(UnaryOp::Abs, Box::new(result))
+                Node::Unary(UnaryOp::Ceil, Box::new(result))
             }
             EOF => Node::EOF,
             _ => panic!(
                 "expected int, float, identifier, {}, {}, {}, or {}",
-                LParen, Pipe, LFloor, LCeil
+                LeftParen, Pipe, LeftFloor, LeftCeil
             ),
         }
     }

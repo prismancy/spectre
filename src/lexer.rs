@@ -55,13 +55,25 @@ impl Lexer {
                     self.advance();
                     Minus
                 }
-                '*' | '∙' | '×' => {
+                '*' => {
                     self.advance();
                     Star
+                }
+                '∙' => {
+                    self.advance();
+                    Dot
+                }
+                '×' => {
+                    self.advance();
+                    Cross
                 }
                 '/' => {
                     self.advance();
                     Slash
+                }
+                '÷' => {
+                    self.advance();
+                    Divide
                 }
                 '%' => {
                     self.advance();
@@ -93,11 +105,11 @@ impl Lexer {
                 }
                 '(' => {
                     self.advance();
-                    LParen
+                    LeftParen
                 }
                 ')' => {
                     self.advance();
-                    RParen
+                    RightParen
                 }
                 '|' => {
                     self.advance();
@@ -105,19 +117,19 @@ impl Lexer {
                 }
                 '⌊' => {
                     self.advance();
-                    LFloor
+                    LeftFloor
                 }
                 '⌋' => {
                     self.advance();
-                    RFloor
+                    RightFloor
                 }
                 '⌈' => {
                     self.advance();
-                    LCeil
+                    LeftCeil
                 }
                 '⌉' => {
                     self.advance();
-                    RCeil
+                    RightCeil
                 }
                 ',' => {
                     self.advance();
