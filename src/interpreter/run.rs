@@ -46,12 +46,17 @@ impl Interpreter {
                     },
                     Floor => match value {
                         Value::Int(x) => Value::Int(x),
-                        Value::Float(x) => Value::Int(x.floor() as i32),
+                        Value::Float(x) => Value::Float(x.floor()),
                         _ => unimplemented!(),
                     },
                     Ceil => match value {
                         Value::Int(x) => Value::Int(x),
-                        Value::Float(x) => Value::Int(x.ceil() as i32),
+                        Value::Float(x) => Value::Float(x.ceil()),
+                        _ => unimplemented!(),
+                    },
+                    Round => match value {
+                        Value::Int(x) => Value::Int(x),
+                        Value::Float(x) => Value::Float(x.round()),
                         _ => unimplemented!(),
                     },
                     Degree => match value {
