@@ -59,6 +59,11 @@ impl Interpreter {
                         Value::Float(x) => Value::Float(x.sqrt().sqrt()),
                         _ => unimplemented!(),
                     },
+                    Abs => match value {
+                        Value::Int(x) => Value::Int(x.abs()),
+                        Value::Float(x) => Value::Float(x.abs()),
+                        _ => unimplemented!(),
+                    },
                 }
             }
             Node::Binary(left, op, right) => {

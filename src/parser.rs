@@ -228,6 +228,17 @@ impl Parser {
 
                 result
             }
+            Pipe => {
+                self.advance();
+                let result = self.expr();
+
+                if self.token != Pipe {
+                    panic!("expected '|'");
+                }
+                self.advance();
+
+                Node::Unary(UnaryOp::Abs, Box::new(result))
+            }
             EOF => Node::EOF,
             _ => panic!("expected int, float, identifier, or '('"),
         }

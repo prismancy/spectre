@@ -8,6 +8,7 @@ pub enum UnaryOp {
     Sqrt,
     Cbrt,
     Fort,
+    Abs,
 }
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BinaryOp {
@@ -46,6 +47,7 @@ impl fmt::Display for Node {
                     Sqrt => write!(f, "(√{})", node),
                     Cbrt => write!(f, "(∛{})", node),
                     Fort => write!(f, "(∜{})", node),
+                    Abs => write!(f, "|{}|", node),
                 }
             }
             Node::Binary(left, op, right) => {

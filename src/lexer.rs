@@ -95,6 +95,10 @@ impl Lexer {
                     self.advance();
                     RParen
                 }
+                '|' => {
+                    self.advance();
+                    Pipe
+                }
                 ',' => {
                     self.advance();
                     Comma
