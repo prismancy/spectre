@@ -80,7 +80,7 @@ impl fmt::Display for Node {
             ),
             Node::Statements(nodes) => write!(
                 f,
-                "[\n  {}\n]",
+                "{{\n  {}\n}}",
                 nodes
                     .iter()
                     .map(|node| format!("{}", node))

@@ -17,6 +17,13 @@ impl Parser {
         }
     }
 
+    fn peek(&self) -> Token {
+        match self.tokens.get(self.index + 1) {
+            Some(token) => token.clone(),
+            _ => EOF,
+        }
+    }
+
     fn advance(&mut self) {
         self.index += 1;
         let next = self.tokens.get(self.index);
@@ -109,6 +116,19 @@ impl Parser {
     }
 
     fn term(&mut self) -> Node {
+        if matches!(self.token, Int(_) | Float(_) | Identifier(_))
+            && !matches!(
+                self.peek(),
+                Int(_) | Float(_) | RightParen | Pipe | RightFloor | RightCeil
+            )
+        {
+            return Node::Binary(
+                Box::new(self.atom()),
+                BinaryOp::Mul,
+                Box::new(self.prefix()),
+            );
+        }
+
         let result = self.factor();
 
         match self.token {
