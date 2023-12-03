@@ -34,7 +34,7 @@ pub enum Node {
     Binary(Box<Node>, BinaryOp, Box<Node>),
     Call(String, Vec<Node>),
     Statements(Vec<Node>),
-    EOF,
+    Eof,
 }
 
 impl fmt::Display for Node {
@@ -89,7 +89,7 @@ impl fmt::Display for Node {
                     .collect::<Vec<String>>()
                     .join("\n  ")
             ),
-            Node::EOF => write!(f, "<eof>"),
+            Node::Eof => write!(f, "<eof>"),
         }
     }
 }

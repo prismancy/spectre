@@ -1,4 +1,8 @@
-use crate::{interpreter::Value, BinaryOp, Node, Scope, UnaryOp};
+use crate::{
+    ast::{BinaryOp, Node, UnaryOp},
+    interpreter::Value,
+    Scope,
+};
 
 pub struct Interpreter {
     pub scope: Scope,
@@ -254,7 +258,7 @@ impl Interpreter {
                 }
                 rtn_value
             }
-            Node::EOF => Value::Int(0),
+            Node::Eof => Value::Int(0),
         }
     }
 }

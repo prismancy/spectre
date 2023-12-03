@@ -1,3 +1,4 @@
+use clap::{self, Parser};
 use std::{
     fs,
     io::{self, Write},
@@ -7,27 +8,35 @@ mod ast;
 mod interpreter;
 mod lexer;
 
-pub use ast::*;
 pub use interpreter::*;
 pub use lexer::*;
 
+#[derive(clap::Parser)]
+struct Arguments {
+    /// The file to run
+    file: Option<String>,
+    /// Verbose mode
+    #[arg(short, long)]
+    verbose: bool,
+}
+
 fn main() {
-    match std::env::args().nth(1).as_deref() {
-        Some("-h") | Some("--help") => {
-            println!("Usage: {} [FILE]", std::env::args().next().unwrap());
-        }
+    let args = Arguments::parse();
+
+    match args.file {
         Some(file) => {
             let input = fs::read_to_string(file).expect("File should be read successfully!");
             let mut lexer = Lexer::new(input);
             let tokens = lexer.lex();
-            println!("{:?}", tokens);
-            if tokens[0] == Token::EOF {
-                return;
+            if args.verbose {
+                println!("tokens: {:?}", tokens);
             }
 
-            let mut parser = Parser::new(tokens);
+            let mut parser = ast::Parser::new(tokens);
             let ast = parser.parse();
-            println!("{}", ast);
+            if args.verbose {
+                println!("AST: {}", ast);
+            }
 
             let mut interpreter = Interpreter::default();
             let value = interpreter.run(ast);
@@ -56,14 +65,15 @@ fn main() {
 
                 let mut lexer = Lexer::new(input);
                 let tokens = lexer.lex();
-                println!("{:?}", tokens);
-                if tokens[0] == Token::EOF {
-                    continue;
+                if args.verbose {
+                    println!("tokens: {:?}", tokens);
                 }
 
-                let mut parser = Parser::new(tokens);
+                let mut parser = ast::Parser::new(tokens);
                 let ast = parser.parse();
-                println!("{}", ast);
+                if args.verbose {
+                    println!("AST: {}", ast);
+                }
 
                 let value = interpreter.run(ast);
                 println!("{}", value);

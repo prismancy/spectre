@@ -1,4 +1,5 @@
-use crate::{BinaryOp, Node, Token, UnaryOp};
+use super::{BinaryOp, Node, UnaryOp};
+use crate::Token;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -65,7 +66,7 @@ impl Parser {
             }
 
             let statement = self.statement();
-            if statement == Node::EOF {
+            if statement == Node::Eof {
                 more_statements = false;
                 continue;
             }
@@ -311,7 +312,7 @@ impl Parser {
 
                 Node::Unary(UnaryOp::Ceil, Box::new(result))
             }
-            EOF => Node::EOF,
+            EOF => Node::Eof,
             _ => panic!(
                 "expected int, float, identifier, {}, {}, {}, or {}",
                 LeftParen, Pipe, LeftFloor, LeftCeil
