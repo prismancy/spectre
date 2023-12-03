@@ -1,16 +1,12 @@
 use std::io::{self, Write};
 
+mod ast;
 mod interpreter;
 mod lexer;
-mod node;
-mod parser;
-mod token;
 
+pub use ast::*;
 pub use interpreter::*;
 pub use lexer::*;
-pub use node::*;
-pub use parser::*;
-pub use token::*;
 
 fn main() {
     let stdin = io::stdin();
