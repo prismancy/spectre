@@ -8,6 +8,7 @@ impl Interpreter {
         self.add_var("𝜑", Value::Float((1.0 + 5.0_f64.sqrt()) / 2.0));
         self.add_var("𝜙", Value::Float((1.0 + 5.0_f64.sqrt()) / 2.0));
         self.add_var("∞", Value::Float(f64::INFINITY));
+        self.add_var("i", Value::Complex(0.0, 1.0));
         self.add_var(
             "abs",
             Value::Function(|args| {
@@ -229,6 +230,90 @@ impl Interpreter {
                         _ => panic!("max expects 2 floats"),
                     },
                     _ => panic!("max expects 2 numbers"),
+                }
+            }),
+        );
+        self.add_var(
+            "clamp",
+            Value::Function(|args| {
+                if args.len() != 3 {
+                    panic!("clamp expects 3 arguments, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Int(a) => match args[1] {
+                        Value::Int(b) => match args[2] {
+                            Value::Int(c) => Value::Int(a.max(b).min(c)),
+                            _ => panic!("clamp expects 3 integers"),
+                        },
+                        _ => panic!("clamp expects 3 integers"),
+                    },
+                    Value::Float(a) => match args[1] {
+                        Value::Float(b) => match args[2] {
+                            Value::Float(c) => Value::Float(a.max(b).min(c)),
+                            _ => panic!("clamp expects 3 floats"),
+                        },
+                        _ => panic!("clamp expects 3 floats"),
+                    },
+                    _ => panic!("clamp expects 3 numbers"),
+                }
+            }),
+        );
+        self.add_var(
+            "Re",
+            Value::Function(|args| {
+                if args.len() != 1 {
+                    panic!("Re expects 1 argument, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Complex(re, _) => Value::Float(re),
+                    _ => panic!("Re expects a complex number"),
+                }
+            }),
+        );
+        self.add_var(
+            "Im",
+            Value::Function(|args| {
+                if args.len() != 1 {
+                    panic!("Im expects 1 argument, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Complex(_, im) => Value::Float(im),
+                    _ => panic!("Im expects a complex number"),
+                }
+            }),
+        );
+        fn arg(args: &Vec<Value>) -> Value {
+            if args.len() != 1 {
+                panic!("arg expects 1 argument, got {}", args.len());
+            }
+            match args[0] {
+                Value::Complex(re, im) => Value::Float(im.atan2(re)),
+                _ => panic!("arg expects a complex number"),
+            }
+        }
+        self.add_var("arg", Value::Function(arg));
+        self.add_var("phase", Value::Function(arg));
+        self.add_var(
+            "conj",
+            Value::Function(|args| {
+                if args.len() != 1 {
+                    panic!("conj expects 1 argument, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Complex(re, im) => Value::Complex(re, -im),
+                    _ => panic!("conj expects a complex number"),
+                }
+            }),
+        );
+        self.add_var(
+            "cis",
+            Value::Function(|args| {
+                if args.len() != 1 {
+                    panic!("cis expects 1 argument, got {}", args.len());
+                }
+                match args[0] {
+                    Value::Float(x) => Value::Complex(x.cos(), x.sin()),
+                    _ => panic!("cis expects a number"),
                 }
             }),
         );

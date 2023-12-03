@@ -37,11 +37,13 @@ impl Interpreter {
                     Neg => match value {
                         Value::Int(x) => Value::Int(-x),
                         Value::Float(x) => Value::Float(-x),
+                        Value::Complex(r, i) => Value::Complex(-r, -i),
                         _ => unimplemented!(),
                     },
                     Abs => match value {
                         Value::Int(x) => Value::Int(x.abs()),
                         Value::Float(x) => Value::Float(x.abs()),
+                        Value::Complex(r, i) => Value::Float(r.hypot(i)),
                         _ => unimplemented!(),
                     },
                     Floor => match value {
@@ -90,82 +92,138 @@ impl Interpreter {
                 let l_value = self.visit(*left);
                 let r_value = self.visit(*right);
 
+                macro_rules! simple_binary_op {
+                    ($op:tt) => {
+                        match l_value {
+                            Value::Int(a) => match r_value {
+                                Value::Int(b) => Value::Int(a $op b),
+                                Value::Float(b) => Value::Float((a as f64) $op b),
+                                Value::Complex(r, i) => Value::Complex((a as f64) $op r, i),
+                                _ => unimplemented!(),
+                            },
+                            Value::Float(a) => match r_value {
+                                Value::Int(b) => Value::Float(a $op (b as f64)),
+                                Value::Float(b) => Value::Float(a $op b),
+                                Value::Complex(r, i) => Value::Complex(a $op r, i),
+                                _ => unimplemented!(),
+                            },
+                            Value::Complex(r, i) => match r_value {
+                                Value::Int(x) => Value::Complex(r $op (x as f64), i),
+                                Value::Float(x) => Value::Complex(r $op x, i),
+                                Value::Complex(r2, i2) => Value::Complex(r $op r2, i $op i2),
+                                _ => unimplemented!(),
+                            },
+                            _ => unimplemented!(),
+                        }
+                    };
+                }
+
                 use BinaryOp::*;
                 match op {
-                    Add => match l_value {
-                        Value::Int(l) => match r_value {
-                            Value::Int(r) => Value::Int(l + r),
-                            Value::Float(r) => Value::Float((l as f64) + r),
-                            _ => unimplemented!(),
-                        },
-                        Value::Float(l) => match r_value {
-                            Value::Int(r) => Value::Float(l + (r as f64)),
-                            Value::Float(r) => Value::Float(l + r),
-                            _ => unimplemented!(),
-                        },
-                        _ => unimplemented!(),
-                    },
-                    Sub => match l_value {
-                        Value::Int(l) => match r_value {
-                            Value::Int(r) => Value::Int(l - r),
-                            Value::Float(r) => Value::Float((l as f64) - r),
-                            _ => unimplemented!(),
-                        },
-                        Value::Float(l) => match r_value {
-                            Value::Int(r) => Value::Float(l - (r as f64)),
-                            Value::Float(r) => Value::Float(l - r),
-                            _ => unimplemented!(),
-                        },
-                        _ => unimplemented!(),
-                    },
+                    Add => simple_binary_op!(+),
+                    Sub => simple_binary_op!(-),
                     Mul => match l_value {
-                        Value::Int(l) => match r_value {
-                            Value::Int(r) => Value::Int(l * r),
-                            Value::Float(r) => Value::Float((l as f64) * r),
+                        Value::Int(a) => match r_value {
+                            Value::Int(b) => Value::Int(a * b),
+                            Value::Float(b) => Value::Float((a as f64) * b),
+                            Value::Complex(r, i) => Value::Complex((a as f64) * r, (a as f64) * i),
                             _ => unimplemented!(),
                         },
-                        Value::Float(l) => match r_value {
-                            Value::Int(r) => Value::Float(l * (r as f64)),
-                            Value::Float(r) => Value::Float(l * r),
+                        Value::Float(a) => match r_value {
+                            Value::Int(b) => Value::Float(a * (b as f64)),
+                            Value::Float(b) => Value::Float(a * b),
+                            Value::Complex(r, i) => Value::Complex(a * r, a * i),
+                            _ => unimplemented!(),
+                        },
+                        Value::Complex(r, i) => match r_value {
+                            Value::Int(x) => Value::Complex(r * (x as f64), i),
+                            Value::Float(x) => Value::Complex(r * x, i),
+                            Value::Complex(r2, i2) => {
+                                let ii = i * i2;
+                                Value::Complex(r * r2 - ii, r * i2 + ii)
+                            }
                             _ => unimplemented!(),
                         },
                         _ => unimplemented!(),
                     },
                     Div => match l_value {
-                        Value::Int(l) => match r_value {
-                            Value::Int(r) => Value::Int(l / r),
-                            Value::Float(r) => Value::Float((l as f64) / r),
+                        Value::Int(a) => match r_value {
+                            Value::Int(b) => Value::Int(a / b),
+                            Value::Float(b) => Value::Float((a as f64) / b),
+                            Value::Complex(r, i) => Value::Complex((a as f64) / r, (a as f64) / i),
                             _ => unimplemented!(),
                         },
-                        Value::Float(l) => match r_value {
-                            Value::Int(r) => Value::Float(l / (r as f64)),
-                            Value::Float(r) => Value::Float(l / r),
+                        Value::Float(a) => match r_value {
+                            Value::Int(b) => Value::Float(a / (b as f64)),
+                            Value::Float(b) => Value::Float(a / b),
+                            Value::Complex(r, i) => Value::Complex(a / r, a / i),
+                            _ => unimplemented!(),
+                        },
+                        Value::Complex(r, i) => match r_value {
+                            Value::Int(x) => Value::Complex(r / (x as f64), i),
+                            Value::Float(x) => Value::Complex(r / x, i),
+                            Value::Complex(r2, i2) => Value::Complex(
+                                (r * r2 + i * i2) / (r2 * r2 + i2 * i2),
+                                (i * r2 - r * i2) / (r2 * r2 + i2 * i2),
+                            ),
                             _ => unimplemented!(),
                         },
                         _ => unimplemented!(),
                     },
                     Rem => match l_value {
-                        Value::Int(l) => match r_value {
-                            Value::Int(r) => Value::Int(l % r),
-                            Value::Float(r) => Value::Float((l as f64) % r),
+                        Value::Int(a) => match r_value {
+                            Value::Int(b) => Value::Int(a % b),
+                            Value::Float(b) => Value::Float((a as f64) % b),
                             _ => unimplemented!(),
                         },
-                        Value::Float(l) => match r_value {
-                            Value::Int(r) => Value::Float(l % (r as f64)),
-                            Value::Float(r) => Value::Float(l % r),
+                        Value::Float(a) => match r_value {
+                            Value::Int(b) => Value::Float(a % (b as f64)),
+                            Value::Float(b) => Value::Float(a % b),
                             _ => unimplemented!(),
                         },
                         _ => unimplemented!(),
                     },
                     Pow => match l_value {
-                        Value::Int(l) => match r_value {
-                            Value::Int(r) => Value::Int(l.pow(r as u32)),
-                            Value::Float(r) => Value::Float((l as f64).powf(r)),
+                        Value::Int(a) => match r_value {
+                            Value::Int(b) => Value::Int(a.pow(b as u32)),
+                            Value::Float(b) => Value::Float((a as f64).powf(b)),
+                            Value::Complex(r, i) => {
+                                let r = (a as f64).powf(r);
+                                let i = (a as f64).powf(i);
+                                Value::Complex(r * i.cos(), r * i.sin())
+                            }
                             _ => unimplemented!(),
                         },
-                        Value::Float(l) => match r_value {
-                            Value::Int(r) => Value::Float(l.powi(r)),
-                            Value::Float(r) => Value::Float(l.powf(r)),
+                        Value::Float(a) => match r_value {
+                            Value::Int(b) => Value::Float(a.powi(b)),
+                            Value::Float(b) => Value::Float(a.powf(b)),
+                            Value::Complex(r, i) => {
+                                let r = a.powf(r);
+                                let i = a.powf(i);
+                                Value::Complex(r * i.cos(), r * i.sin())
+                            }
+                            _ => unimplemented!(),
+                        },
+                        Value::Complex(r, i) => match r_value {
+                            Value::Int(x) => {
+                                let r = r.powi(x);
+                                let i = i.powi(x);
+                                Value::Complex(r * i.cos(), r * i.sin())
+                            }
+                            Value::Float(x) => {
+                                let r = r.powf(x);
+                                let i = i.powf(x);
+                                Value::Complex(r * i.cos(), r * i.sin())
+                            }
+                            Value::Complex(r2, i2) => {
+                                let r = r.hypot(i);
+                                let i = i.atan2(r);
+                                let r2 = r2.hypot(i2);
+                                let i2 = i2.atan2(r2);
+                                let r = r.powf(r2);
+                                let i = i.powf(i2);
+                                Value::Complex(r * i.cos(), r * i.sin())
+                            }
                             _ => unimplemented!(),
                         },
                         _ => unimplemented!(),

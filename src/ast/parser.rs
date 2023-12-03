@@ -116,10 +116,24 @@ impl Parser {
     }
 
     fn term(&mut self) -> Node {
-        if matches!(self.token, Int(_) | Float(_) | Identifier(_))
+        if matches!(self.token, Int(_) | Float(_))
             && !matches!(
                 self.peek(),
-                Int(_) | Float(_) | RightParen | Pipe | RightFloor | RightCeil
+                Int(_)
+                    | Float(_)
+                    | Plus
+                    | Minus
+                    | Star
+                    | Dot
+                    | Cross
+                    | Slash
+                    | Divide
+                    | Percent
+                    | Carrot
+                    | RightParen
+                    | Pipe
+                    | RightFloor
+                    | RightCeil
             )
         {
             return Node::Binary(
