@@ -28,6 +28,11 @@ impl Interpreter {
             Node::Int(x) => Value::Int(x),
             Node::Float(x) => Value::Float(x),
             Node::Identifier(name) => self.scope.get(&name),
+            Node::Assignment(name, node) => {
+                let value = self.visit(*node);
+                self.scope.set(name, value.clone());
+                value
+            }
             Node::Unary(op, node) => {
                 let value = self.visit(*node);
 

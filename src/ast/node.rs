@@ -29,6 +29,7 @@ pub enum Node {
     Int(i32),
     Float(f64),
     Identifier(String),
+    Assignment(String, Box<Node>),
     Unary(UnaryOp, Box<Node>),
     Binary(Box<Node>, BinaryOp, Box<Node>),
     Call(String, Vec<Node>),
@@ -42,6 +43,7 @@ impl fmt::Display for Node {
             Node::Int(x) => write!(f, "{}", x),
             Node::Float(x) => write!(f, "{}", x),
             Node::Identifier(name) => write!(f, "{}", name),
+            Node::Assignment(name, node) => write!(f, "({} = {})", name, node),
             Node::Unary(op, node) => {
                 use UnaryOp::*;
                 match op {

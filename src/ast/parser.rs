@@ -80,7 +80,14 @@ impl Parser {
     }
 
     fn expr(&mut self) -> Node {
-        self.or_expr()
+        match (self.token.clone(), self.peek()) {
+            (Identifier(name), Eq) => {
+                self.advance();
+                self.advance();
+                Node::Assignment(name, Box::new(self.expr()))
+            }
+            _ => self.or_expr(),
+        }
     }
 
     fn or_expr(&mut self) -> Node {
