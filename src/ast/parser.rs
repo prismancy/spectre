@@ -1,9 +1,10 @@
+use std::{iter::Peekable, vec::IntoIter};
+
 use super::{BinaryOp, Node, UnaryOp};
 use crate::Token;
 
 pub struct Parser {
-    tokens: Vec<Token>,
-    index: usize,
+    tokens: Peekable<IntoIter<Token>>,
     token: Token,
 }
 
@@ -11,27 +12,19 @@ use Token::*;
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
+        let mut iter = tokens.into_iter().peekable();
         Self {
-            token: tokens[0].clone(),
-            tokens,
-            index: 0,
+            token: iter.next().unwrap_or(EOF),
+            tokens: iter,
         }
     }
 
-    fn peek(&self) -> Token {
-        match self.tokens.get(self.index + 1) {
-            Some(token) => token.clone(),
-            _ => EOF,
-        }
+    fn peek(&mut self) -> &Token {
+        self.tokens.peek().unwrap_or(&EOF)
     }
 
     fn advance(&mut self) {
-        self.index += 1;
-        let next = self.tokens.get(self.index);
-        self.token = match next {
-            Some(token) => token.clone(),
-            _ => EOF,
-        };
+        self.token = self.tokens.next().unwrap_or(EOF);
     }
 
     fn skip_newlines(&mut self) -> u32 {
@@ -87,24 +80,8 @@ impl Parser {
                 self.advance();
                 Node::Assignment(name, Box::new(self.expr()))
             }
-            _ => self.or_expr(),
+            _ => self.arith_expr(),
         }
-    }
-
-    fn or_expr(&mut self) -> Node {
-        self.and_expr()
-    }
-
-    fn and_expr(&mut self) -> Node {
-        self.not_expr()
-    }
-
-    fn not_expr(&mut self) -> Node {
-        self.comp_expr()
-    }
-
-    fn comp_expr(&mut self) -> Node {
-        self.arith_expr()
     }
 
     fn arith_expr(&mut self) -> Node {
