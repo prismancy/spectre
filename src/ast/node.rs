@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, rc::Rc};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum UnaryOp {
@@ -28,11 +28,11 @@ pub enum BinaryOp {
 pub enum Node {
     Int(i32),
     Float(f64),
-    Identifier(String),
-    Assignment(String, Box<Node>),
+    Identifier(Rc<str>),
+    Assignment(Rc<str>, Box<Node>),
     Unary(UnaryOp, Box<Node>),
     Binary(Box<Node>, BinaryOp, Box<Node>),
-    Call(String, Vec<Node>),
+    Call(Rc<str>, Vec<Node>),
     Statements(Vec<Node>),
     Eof,
 }

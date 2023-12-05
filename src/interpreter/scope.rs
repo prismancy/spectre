@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use crate::interpreter::Value;
 
 #[derive(Default)]
 pub struct Scope {
-    pub variables: HashMap<String, Value>,
+    pub variables: HashMap<Rc<str>, Value>,
 }
 
 impl Scope {
@@ -15,7 +15,7 @@ impl Scope {
         }
     }
 
-    pub fn set(&mut self, name: String, value: Value) {
+    pub fn set(&mut self, name: Rc<str>, value: Value) {
         self.variables.insert(name, value);
     }
 }

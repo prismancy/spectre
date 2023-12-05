@@ -24,7 +24,7 @@ impl Interpreter {
     }
 
     pub fn add_var(&mut self, name: &str, value: Value) {
-        self.scope.set(name.to_string(), value);
+        self.scope.set(name.into(), value);
     }
 
     fn visit(&mut self, node: Node) -> Value {

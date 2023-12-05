@@ -1,10 +1,10 @@
-use std::fmt;
+use std::{fmt, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Int(i32),
     Float(f64),
-    Identifier(String),
+    Identifier(Rc<str>),
     Eq,
     Plus,
     Minus,

@@ -183,6 +183,6 @@ impl Lexer {
             };
         }
 
-        Identifier(word)
+        Identifier(word.into())
     }
 }
