@@ -34,7 +34,7 @@ impl Interpreter {
             Node::Identifier(name) => self.scope.get(&name),
             Node::Assignment(name, node) => {
                 let value = self.visit(*node);
-                self.scope.set(name, value.clone());
+                self.scope.set(name, value);
                 value
             }
             Node::Unary(op, node) => {
@@ -241,8 +241,8 @@ impl Interpreter {
             }
             Node::Call(name, args) => {
                 let arg_values = args
-                    .iter()
-                    .map(|arg| self.visit(arg.clone()))
+                    .into_iter()
+                    .map(|arg| self.visit(arg))
                     .collect::<Vec<Value>>();
 
                 let function = self.scope.get(&name);

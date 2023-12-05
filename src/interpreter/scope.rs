@@ -10,7 +10,7 @@ pub struct Scope {
 impl Scope {
     pub fn get(&self, name: &str) -> Value {
         match self.variables.get(name) {
-            Some(value) => value.clone(),
+            Some(value) => *value,
             None => panic!("{} is not defined", name),
         }
     }
