@@ -1,4 +1,4 @@
-use std::{iter::Peekable, vec::IntoIter};
+use std::{iter::Peekable, rc::Rc, vec::IntoIter};
 
 use super::{BinaryOp, Node, UnaryOp};
 use crate::Token;
@@ -101,33 +101,6 @@ impl Parser {
     }
 
     fn term(&mut self) -> Node {
-        if matches!(self.token, Int(_) | Float(_))
-            && !matches!(
-                self.peek(),
-                Int(_)
-                    | Float(_)
-                    | Plus
-                    | Minus
-                    | Star
-                    | Dot
-                    | Cross
-                    | Slash
-                    | Divide
-                    | Percent
-                    | Carrot
-                    | RightParen
-                    | Pipe
-                    | RightFloor
-                    | RightCeil
-            )
-        {
-            return Node::Binary(
-                Box::new(self.atom()),
-                BinaryOp::Mul,
-                Box::new(self.prefix()),
-            );
-        }
-
         let result = self.factor();
 
         match self.token {
@@ -212,14 +185,36 @@ impl Parser {
 
         match self.token {
             LeftParen => {
+                let name = match result {
+                    Node::Identifier(ref name) => Rc::clone(name),
+                    _ => panic!("expected identifier"),
+                };
                 self.advance();
 
-                match result {
-                    Node::Identifier(name) => {
-                        let args = self.list(RightParen);
-                        Node::Call(name, args)
+                let args = self.list(RightParen);
+
+                match self.token {
+                    Eq => {
+                        self.advance();
+                        let body = self.expr();
+                        Node::FnDef(
+                            name,
+                            args.into_iter()
+                                .map(|node| match node {
+                                    Node::Identifier(name) => name,
+                                    _ => panic!("expected identifier"),
+                                })
+                                .collect(),
+                            Box::new(body),
+                        )
                     }
-                    _ => panic!("expected identifier"),
+                    _ => Node::Call(
+                        match result {
+                            Node::Identifier(name) => name,
+                            _ => panic!("expected identifier"),
+                        },
+                        args,
+                    ),
                 }
             }
             _ => result,
@@ -304,7 +299,7 @@ impl Parser {
             nodes.push(self.expr());
             match &self.token {
                 Comma => self.advance(),
-                t if *t == end => {}
+                token if *token == end => {}
                 _ => panic!("expected {} or {}", Comma, end),
             };
         }

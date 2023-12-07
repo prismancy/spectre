@@ -32,6 +32,7 @@ pub enum Node {
     Assignment(Rc<str>, Box<Node>),
     Unary(UnaryOp, Box<Node>),
     Binary(Box<Node>, BinaryOp, Box<Node>),
+    FnDef(Rc<str>, Vec<Rc<str>>, Box<Node>),
     Call(Rc<str>, Vec<Node>),
     Statements(Vec<Node>),
     Eof,
@@ -71,6 +72,16 @@ impl fmt::Display for Node {
                     Pow => write!(f, "({} ^ {})", left, right),
                 }
             }
+            Node::FnDef(name, args, body) => write!(
+                f,
+                "fn {}({}) {{\n  {}\n}}",
+                name,
+                args.iter()
+                    .map(|arg| format!("{}", arg))
+                    .collect::<Vec<String>>()
+                    .join(", "),
+                body
+            ),
             Node::Call(name, args) => write!(
                 f,
                 "{}({})",

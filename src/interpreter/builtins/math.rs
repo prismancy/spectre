@@ -18,20 +18,9 @@ impl Interpreter {
 
         macro_rules! add_fn {
             ($name:literal, $value:expr) => {
-                self.add_var($name, Value::Function($value));
+                self.add_var($name, Value::NativeFunction($value));
             };
         }
-
-        add_fn!("sinh", |args| {
-            if args.len() != 1 {
-                panic!("sinh expects 1 argument, got {}", args.len());
-            }
-            match args[0] {
-                Value::Int(value) => Value::Float((value as f64).sinh()),
-                Value::Float(value) => Value::Float(value.sinh()),
-                _ => panic!("sinh expects a number"),
-            }
-        });
 
         add_fn!("abs", |args| {
             if args.len() != 1 {

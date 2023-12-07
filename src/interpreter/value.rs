@@ -1,11 +1,14 @@
-use std::fmt;
+use std::{fmt, rc::Rc};
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+use crate::ast::Node;
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Int(i32),
     Float(f64),
     Complex(f64, f64),
-    Function(fn(&Vec<Value>) -> Value),
+    Function(Rc<str>, Vec<Rc<str>>, Box<Node>),
+    NativeFunction(fn(&Vec<Value>) -> Value),
 }
 
 impl From<i32> for Value {
@@ -33,7 +36,8 @@ impl fmt::Display for Value {
             Int(value) => write!(f, "{}", value),
             Float(value) => write!(f, "{}", value),
             Complex(r, i) => write!(f, "{} + {}i", r, i),
-            Function(_) => write!(f, "<fn>"),
+            Function(name, _, _) => write!(f, "<fn {}>", name),
+            NativeFunction(_) => write!(f, "<native fn>"),
         }
     }
 }

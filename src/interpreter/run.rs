@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     ast::{BinaryOp, Node, UnaryOp},
     interpreter::Value,
@@ -34,7 +36,7 @@ impl Interpreter {
             Node::Identifier(name) => self.scope.get(&name),
             Node::Assignment(name, node) => {
                 let value = self.visit(*node);
-                self.scope.set(name, value);
+                self.scope.set(name, value.clone());
                 value
             }
             Node::Unary(op, node) => {
@@ -239,6 +241,11 @@ impl Interpreter {
                     },
                 }
             }
+            Node::FnDef(name, arg_names, node) => {
+                self.scope
+                    .set(Rc::clone(&name), Value::Function(name, arg_names, node));
+                Value::Int(0)
+            }
             Node::Call(name, args) => {
                 let arg_values = args
                     .into_iter()
@@ -247,7 +254,14 @@ impl Interpreter {
 
                 let function = self.scope.get(&name);
                 match function {
-                    Value::Function(function) => function(&arg_values),
+                    Value::Function(_, arg_names, body) => {
+                        let mut interpreter = Interpreter::default();
+                        for (name, value) in arg_names.iter().zip(arg_values) {
+                            interpreter.add_var(name, value.clone());
+                        }
+                        interpreter.visit(*body)
+                    }
+                    Value::NativeFunction(function) => function(&arg_values),
                     _ => panic!("{} is not a function", name),
                 }
             }
