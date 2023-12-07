@@ -101,6 +101,31 @@ impl Parser {
     }
 
     fn term(&mut self) -> Node {
+        if matches!(self.token, Int(_) | Float(_))
+            && !matches!(
+                self.peek(),
+                Int(_)
+                    | Float(_)
+                    | Plus
+                    | Minus
+                    | Star
+                    | Dot
+                    | Cross
+                    | Slash
+                    | Divide
+                    | Percent
+                    | Carrot
+                    | RightParen
+                    | Pipe
+                    | RightFloor
+                    | RightCeil
+                    | Newline
+                    | EOF
+            )
+        {
+            return Node::Binary(Box::new(self.atom()), BinaryOp::Mul, Box::new(self.term()));
+        }
+
         let result = self.factor();
 
         match self.token {
