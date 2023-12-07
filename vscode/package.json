@@ -1,0 +1,43 @@
+{
+  "name": "spectre",
+  "displayName": "Spectre",
+  "description": "Spectre: a math-based language",
+  "version": "0.0.1",
+  "publisher": "iz7n",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "spectre",
+        "aliases": [
+          "Spectre",
+          "spectre"
+        ],
+        "extensions": [
+          ".spectre",
+          ".sp"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "spectre",
+        "scopeName": "source.spectre",
+        "path": "./syntaxes/spectre.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "spectre",
+        "path": "./snippets/snippets.code-snippets"
+      }
+    ]
+  }
+}
