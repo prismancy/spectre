@@ -106,6 +106,7 @@ impl Parser {
                 self.peek(),
                 Int(_)
                     | Float(_)
+                    | Superscript(_)
                     | Plus
                     | Minus
                     | Star
@@ -192,7 +193,7 @@ impl Parser {
     fn postfix(&mut self) -> Node {
         let result = self.call();
 
-        match self.token {
+        match self.token.clone() {
             Exclamation => {
                 self.advance();
                 Node::Unary(UnaryOp::Fact, Box::new(result))
@@ -200,6 +201,14 @@ impl Parser {
             Degree => {
                 self.advance();
                 Node::Unary(UnaryOp::Degree, Box::new(result))
+            }
+            Superscript(tokens) => {
+                self.advance();
+                Node::Binary(
+                    Box::new(result),
+                    BinaryOp::Pow,
+                    Box::new(Parser::new(tokens).arith_expr()),
+                )
             }
             _ => result,
         }

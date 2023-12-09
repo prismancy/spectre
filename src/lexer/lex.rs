@@ -1,6 +1,9 @@
 use crate::Token;
 use Token::*;
 
+const SUPERSCRIPT: &str = "ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾᴿˢᵀᵁⱽᵂˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾";
+const NORMALSCRIPT: &str = "abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ0123456789+-=()";
+
 pub struct Lexer {
     text: String,
     index: usize,
@@ -43,6 +46,7 @@ impl Lexer {
                 ' ' | '\t' | '\r' => self.advance(),
                 '0'..='9' => self.number(),
                 'a'..='z' | 'A'..='Z' | '_' | 'Α'..='ω' | '∞' => self.word(),
+                ch if SUPERSCRIPT.contains(ch) => self.superscript(),
                 '=' => {
                     self.advance();
                     Eq
@@ -170,7 +174,7 @@ impl Lexer {
     }
 
     fn word(&mut self) -> Token {
-        let mut word: String = self.current_char.to_string();
+        let mut word = self.current_char.to_string();
         self.advance();
 
         while self.current_char != '\0' {
@@ -184,5 +188,25 @@ impl Lexer {
         }
 
         Identifier(word.into())
+    }
+
+    fn superscript(&mut self) -> Token {
+        let mut str = String::new();
+
+        while self.current_char != '\0' {
+            match SUPERSCRIPT.chars().position(|ch| ch == self.current_char) {
+                Some(index) => {
+                    let normal_char = NORMALSCRIPT.chars().nth(index).unwrap();
+                    str.push(normal_char);
+                    self.advance();
+                }
+                None => break,
+            };
+        }
+
+        let mut lexer = Lexer::new(str);
+        let mut tokens = lexer.lex();
+        tokens.pop();
+        Superscript(tokens)
     }
 }

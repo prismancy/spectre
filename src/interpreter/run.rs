@@ -78,8 +78,8 @@ impl Interpreter {
                         _ => unimplemented!(),
                     },
                     Fact => match value {
-                        Value::Int(x) => Value::Int(factorial(x)),
-                        Value::Float(x) => Value::Int(factorial(x as i32)),
+                        Value::Int(x) => Value::Int((1..=x).product()),
+                        Value::Float(x) => Value::Int((1..=(x as i32)).product()),
                         _ => unimplemented!(),
                     },
                     Sqrt => match value {
@@ -275,12 +275,4 @@ impl Interpreter {
             Node::Eof => Value::Int(0),
         }
     }
-}
-
-fn factorial(n: i32) -> i32 {
-    let mut product = 1;
-    for i in 1..=n {
-        product *= i;
-    }
-    product
 }

@@ -5,6 +5,7 @@ pub enum Token {
     Int(i32),
     Float(f64),
     Identifier(Rc<str>),
+    Superscript(Vec<Token>),
     Eq,
     Plus,
     Minus,
@@ -39,6 +40,15 @@ impl fmt::Display for Token {
             Int(value) => write!(f, "{}", value),
             Float(value) => write!(f, "{}", value),
             Identifier(name) => write!(f, "{}", name),
+            Superscript(tokens) => write!(
+                f,
+                "^[{}]",
+                tokens
+                    .iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            ),
             Eq => write!(f, "'='"),
             Plus => write!(f, "'+'"),
             Minus => write!(f, "'-'"),
