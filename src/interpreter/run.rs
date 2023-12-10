@@ -105,25 +105,16 @@ impl Interpreter {
 
                 macro_rules! simple_binary_op {
                     ($op:tt) => {
-                        match l_value {
-                            Value::Int(a) => match r_value {
-                                Value::Int(b) => Value::Int(a $op b),
-                                Value::Float(b) => Value::Float((a as f64) $op b),
-                                Value::Complex(r, i) => Value::Complex((a as f64) $op r, i),
-                                _ => unimplemented!(),
-                            },
-                            Value::Float(a) => match r_value {
-                                Value::Int(b) => Value::Float(a $op (b as f64)),
-                                Value::Float(b) => Value::Float(a $op b),
-                                Value::Complex(r, i) => Value::Complex(a $op r, i),
-                                _ => unimplemented!(),
-                            },
-                            Value::Complex(r, i) => match r_value {
-                                Value::Int(x) => Value::Complex(r $op (x as f64), i),
-                                Value::Float(x) => Value::Complex(r $op x, i),
-                                Value::Complex(r2, i2) => Value::Complex(r $op r2, i $op i2),
-                                _ => unimplemented!(),
-                            },
+                        match (l_value, r_value) {
+                            (Value::Int(a), Value::Int(b)) => Value::Int(a $op b),
+                            (Value::Int(a), Value::Float(b)) => Value::Float((a as f64) $op b),
+                            (Value::Int(a), Value::Complex(r, i)) => Value::Complex((a as f64) $op r, i),
+                            (Value::Float(a), Value::Int(b)) => Value::Float(a $op (b as f64)),
+                            (Value::Float(a), Value::Float(b)) => Value::Float(a $op b),
+                            (Value::Float(a), Value::Complex(r, i)) => Value::Complex(a $op r, i),
+                            (Value::Complex(r, i), Value::Int(x)) => Value::Complex(r $op (x as f64), i),
+                            (Value::Complex(r, i), Value::Float(x)) => Value::Complex(r $op x, i),
+                            (Value::Complex(r, i), Value::Complex(r2, i2)) => Value::Complex(r $op r2, i $op i2),
                             _ => unimplemented!(),
                         }
                     };
@@ -133,111 +124,178 @@ impl Interpreter {
                 match op {
                     Add => simple_binary_op!(+),
                     Sub => simple_binary_op!(-),
-                    Mul => match l_value {
-                        Value::Int(a) => match r_value {
-                            Value::Int(b) => Value::Int(a * b),
-                            Value::Float(b) => Value::Float((a as f64) * b),
-                            Value::Complex(r, i) => Value::Complex((a as f64) * r, (a as f64) * i),
-                            _ => unimplemented!(),
-                        },
-                        Value::Float(a) => match r_value {
-                            Value::Int(b) => Value::Float(a * (b as f64)),
-                            Value::Float(b) => Value::Float(a * b),
-                            Value::Complex(r, i) => Value::Complex(a * r, a * i),
-                            _ => unimplemented!(),
-                        },
-                        Value::Complex(r, i) => match r_value {
-                            Value::Int(x) => Value::Complex(r * (x as f64), i),
-                            Value::Float(x) => Value::Complex(r * x, i),
-                            Value::Complex(r2, i2) => {
-                                let ii = i * i2;
-                                Value::Complex(r * r2 - ii, r * i2 + ii)
-                            }
-                            _ => unimplemented!(),
-                        },
-                        _ => unimplemented!(),
+                    Mul => match (l_value, r_value) {
+                        (Value::Int(a), Value::Int(b)) => Value::Int(a * b),
+                        (Value::Int(a), Value::Float(b)) => Value::Float((a as f64) * b),
+                        (Value::Int(a), Value::Complex(r, i)) => {
+                            Value::Complex((a as f64) * r, (a as f64) * i)
+                        }
+                        (Value::Int(a), Value::Function(name, arg_names, body)) => Value::Function(
+                            name,
+                            arg_names,
+                            Box::new(Node::Binary(Box::new(Node::Int(a)), Mul, body)),
+                        ),
+                        (Value::Float(a), Value::Int(b)) => Value::Float(a * (b as f64)),
+                        (Value::Float(a), Value::Float(b)) => Value::Float(a * b),
+                        (Value::Float(a), Value::Complex(r, i)) => Value::Complex(a * r, a * i),
+                        (Value::Float(a), Value::Function(name, arg_names, body)) => {
+                            Value::Function(
+                                name,
+                                arg_names,
+                                Box::new(Node::Binary(Box::new(Node::Float(a)), Mul, body)),
+                            )
+                        }
+                        (Value::Complex(r, i), Value::Int(x)) => Value::Complex(r * (x as f64), i),
+                        (Value::Complex(r, i), Value::Float(x)) => Value::Complex(r * x, i),
+                        (Value::Complex(r, i), Value::Complex(r2, i2)) => {
+                            let ii = i * i2;
+                            Value::Complex(r * r2 - ii, r * i2 + ii)
+                        }
+                        (Value::Function(name, arg_names, body), Value::Int(a)) => Value::Function(
+                            name,
+                            arg_names,
+                            Box::new(Node::Binary(body, Mul, Box::new(Node::Int(a)))),
+                        ),
+                        (Value::Function(name, arg_names, body), Value::Float(a)) => {
+                            Value::Function(
+                                name,
+                                arg_names,
+                                Box::new(Node::Binary(body, Mul, Box::new(Node::Float(a)))),
+                            )
+                        }
+                        (l, r) => panic!("Cannot multiply {} by {}", l, r),
                     },
-                    Div => match l_value {
-                        Value::Int(a) => match r_value {
-                            Value::Int(b) => Value::Int(a / b),
-                            Value::Float(b) => Value::Float((a as f64) / b),
-                            Value::Complex(r, i) => Value::Complex((a as f64) / r, (a as f64) / i),
-                            _ => unimplemented!(),
-                        },
-                        Value::Float(a) => match r_value {
-                            Value::Int(b) => Value::Float(a / (b as f64)),
-                            Value::Float(b) => Value::Float(a / b),
-                            Value::Complex(r, i) => Value::Complex(a / r, a / i),
-                            _ => unimplemented!(),
-                        },
-                        Value::Complex(r, i) => match r_value {
-                            Value::Int(x) => Value::Complex(r / (x as f64), i),
-                            Value::Float(x) => Value::Complex(r / x, i),
-                            Value::Complex(r2, i2) => Value::Complex(
-                                (r * r2 + i * i2) / (r2 * r2 + i2 * i2),
-                                (i * r2 - r * i2) / (r2 * r2 + i2 * i2),
-                            ),
-                            _ => unimplemented!(),
-                        },
-                        _ => unimplemented!(),
+                    Div => match (l_value, r_value) {
+                        (Value::Int(a), Value::Int(b)) => Value::Int(a / b),
+                        (Value::Int(a), Value::Float(b)) => Value::Float((a as f64) / b),
+                        (Value::Int(a), Value::Complex(r, i)) => {
+                            Value::Complex((a as f64) / r, (a as f64) / i)
+                        }
+                        (Value::Int(a), Value::Function(name, arg_names, body)) => Value::Function(
+                            name,
+                            arg_names,
+                            Box::new(Node::Binary(Box::new(Node::Int(a)), Div, body)),
+                        ),
+                        (Value::Float(a), Value::Int(b)) => Value::Float(a / (b as f64)),
+                        (Value::Float(a), Value::Float(b)) => Value::Float(a / b),
+                        (Value::Float(a), Value::Complex(r, i)) => Value::Complex(a / r, a / i),
+                        (Value::Float(a), Value::Function(name, arg_names, body)) => {
+                            Value::Function(
+                                name,
+                                arg_names,
+                                Box::new(Node::Binary(Box::new(Node::Float(a)), Mul, body)),
+                            )
+                        }
+                        (Value::Complex(r, i), Value::Int(x)) => Value::Complex(r / (x as f64), i),
+                        (Value::Complex(r, i), Value::Float(x)) => Value::Complex(r / x, i),
+                        (Value::Complex(r, i), Value::Complex(r2, i2)) => Value::Complex(
+                            (r * r2 + i * i2) / (r2 * r2 + i2 * i2),
+                            (i * r2 - r * i2) / (r2 * r2 + i2 * i2),
+                        ),
+                        (Value::Function(name, arg_names, body), Value::Int(a)) => Value::Function(
+                            name,
+                            arg_names,
+                            Box::new(Node::Binary(body, Div, Box::new(Node::Int(a)))),
+                        ),
+                        (Value::Function(name, arg_names, body), Value::Float(a)) => {
+                            Value::Function(
+                                name,
+                                arg_names,
+                                Box::new(Node::Binary(body, Div, Box::new(Node::Float(a)))),
+                            )
+                        }
+                        (l, r) => panic!("Cannot divide {} by {}", l, r),
                     },
-                    Rem => match l_value {
-                        Value::Int(a) => match r_value {
-                            Value::Int(b) => Value::Int(a % b),
-                            Value::Float(b) => Value::Float((a as f64) % b),
-                            _ => unimplemented!(),
-                        },
-                        Value::Float(a) => match r_value {
-                            Value::Int(b) => Value::Float(a % (b as f64)),
-                            Value::Float(b) => Value::Float(a % b),
-                            _ => unimplemented!(),
-                        },
-                        _ => unimplemented!(),
+                    Rem => match (l_value, r_value) {
+                        (Value::Int(a), Value::Int(b)) => Value::Int(a % b),
+                        (Value::Int(a), Value::Float(b)) => Value::Float((a as f64) % b),
+                        (Value::Int(a), Value::Function(name, arg_names, body)) => Value::Function(
+                            name,
+                            arg_names,
+                            Box::new(Node::Binary(Box::new(Node::Int(a)), Div, body)),
+                        ),
+                        (Value::Float(a), Value::Int(b)) => Value::Float(a % (b as f64)),
+                        (Value::Float(a), Value::Float(b)) => Value::Float(a % b),
+                        (Value::Float(a), Value::Function(name, arg_names, body)) => {
+                            Value::Function(
+                                name,
+                                arg_names,
+                                Box::new(Node::Binary(Box::new(Node::Float(a)), Rem, body)),
+                            )
+                        }
+                        (Value::Function(name, arg_names, body), Value::Int(a)) => Value::Function(
+                            name,
+                            arg_names,
+                            Box::new(Node::Binary(body, Rem, Box::new(Node::Int(a)))),
+                        ),
+                        (Value::Function(name, arg_names, body), Value::Float(a)) => {
+                            Value::Function(
+                                name,
+                                arg_names,
+                                Box::new(Node::Binary(body, Rem, Box::new(Node::Float(a)))),
+                            )
+                        }
+                        (l, r) => panic!("Cannot take remainder of {} and {}", l, r),
                     },
-                    Pow => match l_value {
-                        Value::Int(a) => match r_value {
-                            Value::Int(b) => Value::Int(a.pow(b as u32)),
-                            Value::Float(b) => Value::Float((a as f64).powf(b)),
-                            Value::Complex(r, i) => {
-                                let r = (a as f64).powf(r);
-                                let i = (a as f64).powf(i);
-                                Value::Complex(r * i.cos(), r * i.sin())
-                            }
-                            _ => unimplemented!(),
-                        },
-                        Value::Float(a) => match r_value {
-                            Value::Int(b) => Value::Float(a.powi(b)),
-                            Value::Float(b) => Value::Float(a.powf(b)),
-                            Value::Complex(r, i) => {
-                                let r = a.powf(r);
-                                let i = a.powf(i);
-                                Value::Complex(r * i.cos(), r * i.sin())
-                            }
-                            _ => unimplemented!(),
-                        },
-                        Value::Complex(r, i) => match r_value {
-                            Value::Int(x) => {
-                                let r = r.powi(x);
-                                let i = i.powi(x);
-                                Value::Complex(r * i.cos(), r * i.sin())
-                            }
-                            Value::Float(x) => {
-                                let r = r.powf(x);
-                                let i = i.powf(x);
-                                Value::Complex(r * i.cos(), r * i.sin())
-                            }
-                            Value::Complex(r2, i2) => {
-                                let r = r.hypot(i);
-                                let i = i.atan2(r);
-                                let r2 = r2.hypot(i2);
-                                let i2 = i2.atan2(r2);
-                                let r = r.powf(r2);
-                                let i = i.powf(i2);
-                                Value::Complex(r * i.cos(), r * i.sin())
-                            }
-                            _ => unimplemented!(),
-                        },
-                        _ => unimplemented!(),
+                    Pow => match (l_value, r_value) {
+                        (Value::Int(a), Value::Int(b)) => Value::Int(a.pow(b as u32)),
+                        (Value::Int(a), Value::Float(b)) => Value::Float((a as f64).powf(b)),
+                        (Value::Int(a), Value::Complex(r, i)) => {
+                            let r = (a as f64).powf(r);
+                            let i = (a as f64).powf(i);
+                            Value::Complex(r * i.cos(), r * i.sin())
+                        }
+                        (Value::Int(a), Value::Function(name, arg_names, body)) => Value::Function(
+                            name,
+                            arg_names,
+                            Box::new(Node::Binary(Box::new(Node::Int(a)), Pow, body)),
+                        ),
+                        (Value::Float(a), Value::Int(b)) => Value::Float(a.powi(b)),
+                        (Value::Float(a), Value::Float(b)) => Value::Float(a.powf(b)),
+                        (Value::Float(a), Value::Complex(r, i)) => {
+                            let r = a.powf(r);
+                            let i = a.powf(i);
+                            Value::Complex(r * i.cos(), r * i.sin())
+                        }
+                        (Value::Float(a), Value::Function(name, arg_names, body)) => {
+                            Value::Function(
+                                name,
+                                arg_names,
+                                Box::new(Node::Binary(Box::new(Node::Float(a)), Pow, body)),
+                            )
+                        }
+                        (Value::Complex(r, i), Value::Int(x)) => {
+                            let r = r.powi(x);
+                            let i = i.powi(x);
+                            Value::Complex(r * i.cos(), r * i.sin())
+                        }
+                        (Value::Complex(r, i), Value::Float(x)) => {
+                            let r = r.powf(x);
+                            let i = i.powf(x);
+                            Value::Complex(r * i.cos(), r * i.sin())
+                        }
+                        (Value::Complex(r, i), Value::Complex(r2, i2)) => {
+                            let r = r.hypot(i);
+                            let i = i.atan2(r);
+                            let r2 = r2.hypot(i2);
+                            let i2 = i2.atan2(r2);
+                            let r = r.powf(r2);
+                            let i = i.powf(i2);
+                            Value::Complex(r * i.cos(), r * i.sin())
+                        }
+                        (Value::Function(name, arg_names, body), Value::Int(a)) => Value::Function(
+                            name,
+                            arg_names,
+                            Box::new(Node::Binary(body, Pow, Box::new(Node::Int(a)))),
+                        ),
+                        (Value::Function(name, arg_names, body), Value::Float(a)) => {
+                            Value::Function(
+                                name,
+                                arg_names,
+                                Box::new(Node::Binary(body, Pow, Box::new(Node::Float(a)))),
+                            )
+                        }
+                        (l, r) => panic!("Cannot raise {} to the power of {}", l, r),
                     },
                 }
             }

@@ -31,6 +31,14 @@
     "prefix": "ceil",
     "body": "⌈$0⌉"
   },
+  "Square": {
+    "prefix": "sq",
+    "body": "$0²"
+  },
+  "Cube": {
+    "prefix": "cube",
+    "body": "$0³"
+  },
   "Square root": {
     "prefix": "sqrt",
     "body": "√"
