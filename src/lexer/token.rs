@@ -1,7 +1,9 @@
 use std::{fmt, rc::Rc};
 
+use crate::position::Position;
+
 #[derive(Debug, Clone, PartialEq)]
-pub enum Token {
+pub enum TokenType {
     Int(i32),
     Float(f64),
     Identifier(Rc<str>),
@@ -33,16 +35,16 @@ pub enum Token {
     EOF,
 }
 
-impl fmt::Display for Token {
+impl fmt::Display for TokenType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use Token::*;
+        use TokenType::*;
         match self {
             Int(value) => write!(f, "{}", value),
             Float(value) => write!(f, "{}", value),
             Identifier(name) => write!(f, "{}", name),
             Superscript(tokens) => write!(
                 f,
-                "^[{}]",
+                "^({})",
                 tokens
                     .iter()
                     .map(|t| t.to_string())
@@ -75,5 +77,18 @@ impl fmt::Display for Token {
             Newline => write!(f, "'\\n'"),
             EOF => write!(f, "<eof>"),
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Token {
+    pub ty: TokenType,
+    pub start: Position,
+    pub end: Position,
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.ty)
     }
 }

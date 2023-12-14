@@ -7,6 +7,7 @@ use std::{
 mod ast;
 mod interpreter;
 mod lexer;
+mod position;
 
 pub use interpreter::*;
 pub use lexer::*;
@@ -26,21 +27,7 @@ fn main() {
     match args.file {
         Some(file) => {
             let input = fs::read_to_string(file).expect("File should be read successfully!");
-            let mut lexer = Lexer::new(input);
-            let tokens = lexer.lex();
-            if args.verbose {
-                println!("tokens: {:?}", tokens);
-            }
-
-            let mut parser = ast::Parser::new(tokens);
-            let ast = parser.parse();
-            if args.verbose {
-                println!("AST: {}", ast);
-            }
-
-            let mut interpreter = Interpreter::default();
-            let value = interpreter.run(ast);
-            println!("{}", value);
+            run(input, args.verbose, &mut Interpreter::default());
         }
         None => {
             let stdin = io::stdin();
@@ -63,21 +50,52 @@ fn main() {
                     return;
                 }
 
-                let mut lexer = Lexer::new(input);
-                let tokens = lexer.lex();
-                if args.verbose {
-                    println!("tokens: {:?}", tokens);
-                }
-
-                let mut parser = ast::Parser::new(tokens);
-                let ast = parser.parse();
-                if args.verbose {
-                    println!("AST: {}", ast);
-                }
-
-                let value = interpreter.run(ast);
-                println!("{}", value);
+                run(input, args.verbose, &mut interpreter);
             }
+        }
+    }
+}
+
+fn run(input: String, verbose: bool, interpreter: &mut Interpreter) {
+    let mut lexer = Lexer::new(input.clone());
+    match lexer.lex() {
+        Ok(tokens) => {
+            if verbose {
+                println!(
+                    "tokens: {}",
+                    tokens
+                        .iter()
+                        .map(|t| t.to_string())
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                );
+            }
+
+            let mut parser = ast::Parser::new(tokens);
+            match parser.parse() {
+                Ok(ast) => {
+                    if verbose {
+                        println!("AST: {}", ast);
+                    }
+
+                    let value = interpreter.run(ast);
+                    println!("{}", value);
+                }
+                Err(e) => {
+                    eprintln!(
+                        "Error: {}\n{}",
+                        e,
+                        e.start.get_lines_between_as_display(&e.end, &input)
+                    );
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!(
+                "Error: {}\n{}",
+                e,
+                e.start.get_lines_between_as_display(&e.end, &input)
+            );
         }
     }
 }
