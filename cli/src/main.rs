@@ -1,9 +1,12 @@
 use std::{
     fs,
     io::{self, Write},
+    path::Path,
 };
 
+use ariadne::{Color, Label, Report, ReportKind, Source};
 use clap::{self, Parser};
+use common::SpectreError;
 use interpreter::Interpreter;
 use lexer::Lexer;
 
@@ -21,7 +24,8 @@ fn main() {
 
     match args.file {
         Some(file) => {
-            let input = fs::read_to_string(file).expect("File should be read successfully!");
+            let path = Path::new(&file);
+            let input = fs::read_to_string(path).expect("File should be read successfully!");
             run(input, args.verbose, &mut Interpreter::default());
         }
         None => {
@@ -77,20 +81,25 @@ fn run(input: String, verbose: bool, interpreter: &mut Interpreter) {
                     println!("{}", value);
                 }
                 Err(e) => {
-                    eprintln!(
-                        "Error: {}\n{}",
-                        e,
-                        e.start.get_lines_between_as_display(&e.end, &input)
-                    );
+                    print_error(e, &input);
                 }
             }
         }
         Err(e) => {
-            eprintln!(
-                "Error: {}\n{}",
-                e,
-                e.start.get_lines_between_as_display(&e.end, &input)
-            );
+            print_error(e, &input);
         }
     }
+}
+
+fn print_error(error: SpectreError, input: &str) {
+    Report::build(ReportKind::Error, (), error.range.start)
+        .with_message(&error.msg)
+        .with_label(
+            Label::new(error.range)
+                .with_color(Color::Red)
+                .with_message(&error.reason),
+        )
+        .finish()
+        .eprint(Source::from(input))
+        .unwrap();
 }

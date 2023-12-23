@@ -8,7 +8,9 @@ name = "spectre"
 path = "src/main.rs"
 
 [dependencies]
+common = { path = "../common" }
 lexer = { path = "../lexer" }
 parser = { path = "../parser" }
 interpreter = { path = "../interpreter" }
 clap = { version = "4.4.10", features = ["derive"] }
+ariadne = "0.3.0"

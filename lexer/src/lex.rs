@@ -1,27 +1,23 @@
-use common::Position;
-
-use crate::{LexError, Token, TokenType};
+use crate::{Token, TokenType};
+use common::SpectreError;
+use TokenType::*;
 
 const SUPERSCRIPT: &str = "ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾᴿˢᵀᵁⱽᵂˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾";
 const NORMALSCRIPT: &str = "abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ0123456789+-=()";
 
-type LexResult = Result<Token, LexError>;
+type LexResult = Result<Token, SpectreError>;
 
 pub struct Lexer {
     source: String,
     index: usize,
     current_char: char,
-    position: Position,
 }
-
-use TokenType::*;
 
 impl Lexer {
     pub fn new(source: String) -> Self {
         Self {
             index: 0,
             current_char: source.chars().nth(0).unwrap_or('\0'),
-            position: Position::default(),
             source,
         }
     }
@@ -30,23 +26,21 @@ impl Lexer {
         self.index += 1;
         let ch = self.source.chars().nth(self.index).unwrap_or('\0');
         self.current_char = ch;
-        self.position.advance(ch);
         Token {
             ty: EOF,
-            start: self.position,
-            end: self.position,
+            range: self.index..self.index + 1,
         }
     }
 
-    fn error(&self, msg: String, start: Position) -> LexError {
-        LexError {
+    fn error(&self, msg: String, reason: String, start: usize) -> SpectreError {
+        SpectreError {
             msg,
-            start,
-            end: self.position,
+            reason,
+            range: start..self.index,
         }
     }
 
-    pub fn lex(&mut self) -> Result<Vec<Token>, LexError> {
+    pub fn lex(&mut self) -> Result<Vec<Token>, SpectreError> {
         let mut tokens: Vec<Token> = vec![];
         let mut token = self.next_token()?;
         while token.ty != EOF {
@@ -62,7 +56,7 @@ impl Lexer {
             self.advance();
         }
 
-        let start = self.position;
+        let start = self.index;
         match self.current_char {
             '0'..='9' => self.number(),
             'a'..='z' | 'A'..='Z' | '_' | 'Α'..='ω' | '∞' => self.word(),
@@ -71,208 +65,184 @@ impl Lexer {
                 self.advance();
                 Ok(Token {
                     ty: Eq,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '+' => {
                 self.advance();
                 Ok(Token {
                     ty: Plus,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '-' => {
                 self.advance();
                 Ok(Token {
                     ty: Minus,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '*' => {
                 self.advance();
                 Ok(Token {
                     ty: Star,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '∙' => {
                 self.advance();
                 Ok(Token {
                     ty: Dot,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '×' => {
                 self.advance();
                 Ok(Token {
                     ty: Cross,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '/' => {
                 self.advance();
                 Ok(Token {
                     ty: Slash,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '÷' => {
                 self.advance();
                 Ok(Token {
                     ty: Divide,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '%' => {
                 self.advance();
                 Ok(Token {
                     ty: Percent,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '^' => {
                 self.advance();
                 Ok(Token {
                     ty: Carrot,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '!' => {
                 self.advance();
                 Ok(Token {
                     ty: Exclamation,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '°' => {
                 self.advance();
                 Ok(Token {
                     ty: Degree,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '√' => {
                 self.advance();
                 Ok(Token {
                     ty: Sqrt,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '∛' => {
                 self.advance();
                 Ok(Token {
                     ty: Cbrt,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '∜' => {
                 self.advance();
                 Ok(Token {
                     ty: Fort,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '(' => {
                 self.advance();
                 Ok(Token {
                     ty: LeftParen,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             ')' => {
                 self.advance();
                 Ok(Token {
                     ty: RightParen,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '|' => {
                 self.advance();
                 Ok(Token {
                     ty: Pipe,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '⌊' => {
                 self.advance();
                 Ok(Token {
                     ty: LeftFloor,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '⌋' => {
                 self.advance();
                 Ok(Token {
                     ty: RightFloor,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '⌈' => {
                 self.advance();
                 Ok(Token {
                     ty: LeftCeil,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '⌉' => {
                 self.advance();
                 Ok(Token {
                     ty: RightCeil,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             ',' => {
                 self.advance();
                 Ok(Token {
                     ty: Comma,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '\n' | ';' => {
                 self.advance();
                 Ok(Token {
                     ty: Newline,
-                    start,
-                    end: self.position,
+                    range: start..self.index,
                 })
             }
             '\0' => Ok(Token {
                 ty: EOF,
-                start,
-                end: self.position,
+                range: start..self.index,
             }),
             _ => Err(self.error(
-                format!("unknown character '{}'", self.current_char),
-                self.position,
+                "invalid character".to_string(),
+                format!("'{}' is not a valid character", self.current_char),
+                start,
             )),
         }
     }
 
     fn number(&mut self) -> LexResult {
-        let start = self.position;
+        let start = self.index;
         let mut num_str: String = self.current_char.to_string();
         let mut decimals = 0;
         self.advance();
@@ -291,13 +261,12 @@ impl Lexer {
             } else {
                 Int(num_str.parse::<i32>().unwrap())
             },
-            start,
-            end: self.position,
+            range: start..self.index,
         })
     }
 
     fn word(&mut self) -> LexResult {
-        let start = self.position;
+        let start = self.index;
         let mut word = self.current_char.to_string();
         self.advance();
 
@@ -313,13 +282,12 @@ impl Lexer {
 
         Ok(Token {
             ty: Identifier(word.into()),
-            start,
-            end: self.position,
+            range: start..self.index,
         })
     }
 
     fn superscript(&mut self) -> LexResult {
-        let start = self.position;
+        let start = self.index;
         let mut source = String::new();
 
         while self.current_char != '\0' {
@@ -338,8 +306,7 @@ impl Lexer {
         tokens.pop();
         Ok(Token {
             ty: Superscript(tokens),
-            start,
-            end: self.position,
+            range: start..self.index,
         })
     }
 }

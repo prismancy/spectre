@@ -1,12 +1,11 @@
 use std::{iter::Peekable, rc::Rc, vec::IntoIter};
 
-use common::Position;
+use crate::{BinaryOp, Node, UnaryOp};
+use common::SpectreError;
 use lexer::{Token, TokenType};
 use TokenType::*;
 
-use crate::{BinaryOp, Node, ParseError, UnaryOp};
-
-type ParseResult = Result<Node, ParseError>;
+type ParseResult = Result<Node, SpectreError>;
 
 pub struct Parser {
     tokens: Peekable<IntoIter<Token>>,
@@ -19,8 +18,7 @@ impl Parser {
         Self {
             token: iter.next().unwrap_or(Token {
                 ty: EOF,
-                start: Default::default(),
-                end: Default::default(),
+                range: Default::default(),
             }),
             tokens: iter,
         }
@@ -36,16 +34,15 @@ impl Parser {
     fn advance(&mut self) {
         self.token = self.tokens.next().unwrap_or(Token {
             ty: EOF,
-            start: Default::default(),
-            end: Default::default(),
+            range: Default::default(),
         });
     }
 
-    fn error<T>(&self, msg: String, start: Position) -> Result<T, ParseError> {
-        Err(ParseError {
+    fn error<T>(&self, msg: String, reason: String, start: usize) -> Result<T, SpectreError> {
+        Err(SpectreError {
             msg,
-            start,
-            end: self.token.end,
+            reason,
+            range: start..self.token.range.end,
         })
     }
 
@@ -58,7 +55,7 @@ impl Parser {
         newlines
     }
 
-    pub fn parse(&mut self) -> Result<Node, ParseError> {
+    pub fn parse(&mut self) -> Result<Node, SpectreError> {
         let mut statements: Vec<Node> = vec![];
         self.skip_newlines();
 
@@ -245,18 +242,19 @@ impl Parser {
     }
 
     fn call(&mut self) -> ParseResult {
-        let start = self.token.start;
+        let start = self.token.range.start;
         let result = self.atom()?;
 
         match self.token.ty {
             LeftParen => {
+                let list_start = self.token.range.start;
                 let name = match result {
                     Node::Identifier(ref name) => Rc::clone(name),
                     _ => panic!("expected identifier"),
                 };
                 self.advance();
 
-                let args = self.list(RightParen)?;
+                let args = self.list(list_start, RightParen)?;
 
                 match self.token.ty {
                     Eq => {
@@ -275,7 +273,11 @@ impl Parser {
                     }
                     _ => match result {
                         Node::Identifier(name) => Ok(Node::Call(name, args)),
-                        _ => self.error("expected identifier".into(), start),
+                        _ => self.error(
+                            "expected token".to_string(),
+                            "there should be an identifier here".to_string(),
+                            start,
+                        ),
                     },
                 }
             }
@@ -284,7 +286,7 @@ impl Parser {
     }
 
     fn atom(&mut self) -> ParseResult {
-        let start = self.token.start;
+        let start = self.token.range.start;
 
         match self.token.ty.clone() {
             Int(x) => {
@@ -304,7 +306,11 @@ impl Parser {
                 let result = self.expr()?;
 
                 if self.token.ty != RightParen {
-                    return self.error(format!("expected {}", RightParen), start);
+                    return self.error(
+                        "expected token".to_string(),
+                        format!("expected {}", RightParen),
+                        start,
+                    );
                 }
                 self.advance();
 
@@ -315,7 +321,11 @@ impl Parser {
                 let result = self.expr()?;
 
                 if self.token.ty != Pipe {
-                    return self.error(format!("expected {}", Pipe), start);
+                    return self.error(
+                        "expected token".to_string(),
+                        format!("expected {}", Pipe),
+                        start,
+                    );
                 }
                 self.advance();
 
@@ -334,7 +344,11 @@ impl Parser {
                         self.advance();
                         Ok(Node::Unary(UnaryOp::Abs, Box::new(result)))
                     }
-                    _ => self.error(format!("expected {} or {}", RightFloor, RightCeil), start),
+                    _ => self.error(
+                        "expected token".to_string(),
+                        format!("expected {} or {}", RightFloor, RightCeil),
+                        start,
+                    ),
                 }
             }
             LeftCeil => {
@@ -342,7 +356,11 @@ impl Parser {
                 let result = self.expr()?;
 
                 if self.token.ty != RightCeil {
-                    return self.error(format!("expected {}", RightCeil), start);
+                    return self.error(
+                        "expected token".to_string(),
+                        format!("expected {}", RightCeil),
+                        start,
+                    );
                 }
                 self.advance();
 
@@ -350,6 +368,7 @@ impl Parser {
             }
             EOF => Ok(Node::Eof),
             _ => self.error(
+                "expected token".to_string(),
                 format!(
                     "expected int, float, identifier, {}, {}, {}, or {}",
                     LeftParen, Pipe, LeftFloor, LeftCeil
@@ -359,8 +378,7 @@ impl Parser {
         }
     }
 
-    fn list(&mut self, end: TokenType) -> Result<Vec<Node>, ParseError> {
-        let start = self.token.start;
+    fn list(&mut self, start: usize, end: TokenType) -> Result<Vec<Node>, SpectreError> {
         let mut nodes: Vec<Node> = vec![];
 
         while self.token.ty != end {
@@ -368,12 +386,22 @@ impl Parser {
             match &self.token.ty {
                 Comma => self.advance(),
                 token if *token == end => {}
-                _ => return self.error(format!("expected {} or {}", Comma, end), start),
+                _ => {
+                    return self.error(
+                        "expected token".to_string(),
+                        format!("expected {} or {}", Comma, end),
+                        start,
+                    )
+                }
             };
         }
 
         if self.token.ty != end {
-            return self.error(format!("expected {}", end), start);
+            return self.error(
+                "expected token".to_string(),
+                format!("expected {}", end),
+                start,
+            );
         }
         self.advance();
 

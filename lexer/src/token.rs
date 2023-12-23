@@ -1,6 +1,4 @@
-use std::{fmt, rc::Rc};
-
-use common::Position;
+use std::{fmt, ops::Range, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
@@ -83,8 +81,7 @@ impl fmt::Display for TokenType {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub ty: TokenType,
-    pub start: Position,
-    pub end: Position,
+    pub range: Range<usize>,
 }
 
 impl fmt::Display for Token {
