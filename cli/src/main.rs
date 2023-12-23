@@ -1,16 +1,11 @@
-use clap::{self, Parser};
 use std::{
     fs,
     io::{self, Write},
 };
 
-mod ast;
-mod interpreter;
-mod lexer;
-mod position;
-
-pub use interpreter::*;
-pub use lexer::*;
+use clap::{self, Parser};
+use interpreter::Interpreter;
+use lexer::Lexer;
 
 #[derive(clap::Parser)]
 struct Arguments {
@@ -71,7 +66,7 @@ fn run(input: String, verbose: bool, interpreter: &mut Interpreter) {
                 );
             }
 
-            let mut parser = ast::Parser::new(tokens);
+            let mut parser = parser::Parser::new(tokens);
             match parser.parse() {
                 Ok(ast) => {
                     if verbose {

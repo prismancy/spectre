@@ -1,10 +1,8 @@
 use std::rc::Rc;
 
-use crate::{
-    ast::{BinaryOp, Node, UnaryOp},
-    interpreter::Value,
-    Scope,
-};
+use parser::{BinaryOp, Node, UnaryOp};
+
+use crate::{Scope, Value};
 
 pub struct Interpreter {
     pub scope: Scope,

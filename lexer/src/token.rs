@@ -1,6 +1,6 @@
 use std::{fmt, rc::Rc};
 
-use crate::position::Position;
+use common::Position;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {

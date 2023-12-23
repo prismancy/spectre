@@ -1,7 +1,10 @@
 use std::{iter::Peekable, rc::Rc, vec::IntoIter};
 
-use super::{BinaryOp, Node, ParseError, UnaryOp};
-use crate::{position::Position, Token, TokenType};
+use common::Position;
+use lexer::{Token, TokenType};
+use TokenType::*;
+
+use crate::{BinaryOp, Node, ParseError, UnaryOp};
 
 type ParseResult = Result<Node, ParseError>;
 
@@ -9,8 +12,6 @@ pub struct Parser {
     tokens: Peekable<IntoIter<Token>>,
     token: Token,
 }
-
-use TokenType::*;
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {

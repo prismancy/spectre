@@ -1,5 +1,6 @@
-use crate::{position::Position, LexError, Token, TokenType};
-use TokenType::*;
+use common::Position;
+
+use crate::{LexError, Token, TokenType};
 
 const SUPERSCRIPT: &str = "ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾᴿˢᵀᵁⱽᵂˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾";
 const NORMALSCRIPT: &str = "abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ0123456789+-=()";
@@ -12,6 +13,8 @@ pub struct Lexer {
     current_char: char,
     position: Position,
 }
+
+use TokenType::*;
 
 impl Lexer {
     pub fn new(source: String) -> Self {

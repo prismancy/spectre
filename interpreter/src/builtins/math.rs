@@ -1,4 +1,4 @@
-use crate::{interpreter::Value, Interpreter};
+use crate::{Interpreter, Value};
 
 impl Interpreter {
     pub fn math(&mut self) {

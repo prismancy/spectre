@@ -1,6 +1,6 @@
 use std::{collections::HashMap, rc::Rc};
 
-use crate::interpreter::Value;
+use crate::Value;
 
 #[derive(Default)]
 pub struct Scope {

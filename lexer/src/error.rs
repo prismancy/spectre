@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::position::Position;
+use common::Position;
 
 #[derive(Debug)]
 pub struct LexError {

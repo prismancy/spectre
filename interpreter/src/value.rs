@@ -1,6 +1,6 @@
 use std::{fmt, rc::Rc};
 
-use crate::ast::Node;
+use parser::Node;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
