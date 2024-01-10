@@ -55,7 +55,11 @@ impl Parser {
         newlines
     }
 
-    pub fn parse(&mut self) -> Result<Node, SpectreError> {
+    pub fn parse(&mut self) -> ParseResult {
+        self.statements()
+    }
+
+    fn statements(&mut self) -> ParseResult {
         let mut statements: Vec<Node> = vec![];
         self.skip_newlines();
 
@@ -69,7 +73,7 @@ impl Parser {
                 more_statements = false;
             }
 
-            if !more_statements {
+            if !more_statements || self.token.ty == RightBrace {
                 break;
             }
 
@@ -140,6 +144,8 @@ impl Parser {
                     | Percent
                     | Carrot
                     | RightParen
+                    | LeftBrace
+                    | RightBrace
                     | Pipe
                     | RightFloor
                     | RightCeil
@@ -366,13 +372,55 @@ impl Parser {
 
                 Ok(Node::Unary(UnaryOp::Ceil, Box::new(result)))
             }
+            If => self.if_expr(),
             EOF => Ok(Node::Eof),
             _ => self.error(
                 "expected token".to_string(),
                 format!(
-                    "expected int, float, identifier, {}, {}, {}, or {}",
-                    LeftParen, Pipe, LeftFloor, LeftCeil
+                    "expected int, float, identifier, {}, {}, {}, {}, or {}",
+                    LeftParen, Pipe, LeftFloor, LeftCeil, If
                 ),
+                start,
+            ),
+        }
+    }
+
+    fn if_expr(&mut self) -> ParseResult {
+        let start = self.token.range.start;
+        self.advance();
+
+        let condition = self.expr()?;
+
+        if self.token.ty != LeftBrace {
+            return self.error(
+                "expected token".to_string(),
+                format!("expected {}", LeftBrace),
+                start,
+            );
+        }
+
+        let body = self.block()?;
+
+        self.skip_newlines();
+
+        let mut else_case: Option<Box<Node>> = None;
+        if self.token.ty == Else {
+            else_case = Some(Box::new(self.else_expr()?));
+        }
+
+        Ok(Node::If(Box::new(condition), Box::new(body), else_case))
+    }
+
+    fn else_expr(&mut self) -> ParseResult {
+        let start = self.token.range.start;
+        self.advance();
+
+        match self.token.ty {
+            LeftBrace => self.block(),
+            If => self.if_expr(),
+            _ => self.error(
+                "expected token".to_string(),
+                format!("expected {} or {}", LeftBrace, If),
                 start,
             ),
         }
@@ -406,5 +454,23 @@ impl Parser {
         self.advance();
 
         Ok(nodes)
+    }
+
+    fn block(&mut self) -> ParseResult {
+        let start = self.token.range.start;
+        self.advance();
+
+        let statements = self.statements()?;
+
+        if self.token.ty != RightBrace {
+            return self.error(
+                "expected token".to_string(),
+                format!("expected {}", RightBrace),
+                start,
+            );
+        }
+        self.advance();
+
+        Ok(statements)
     }
 }

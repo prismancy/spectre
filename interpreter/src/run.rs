@@ -297,6 +297,16 @@ impl Interpreter {
                     },
                 }
             }
+            Node::If(cond, then, else_case) => {
+                let cond = self.visit(*cond);
+                match cond {
+                    Value::Int(0) => match else_case {
+                        Some(else_case) => self.visit(*else_case),
+                        None => Value::Int(0),
+                    },
+                    _ => self.visit(*then),
+                }
+            }
             Node::FnDef(name, arg_names, node) => {
                 self.scope
                     .set(Rc::clone(&name), Value::Function(name, arg_names, node));

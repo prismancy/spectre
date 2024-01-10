@@ -180,6 +180,20 @@ impl Lexer {
                     range: start..self.index,
                 })
             }
+            '{' => {
+                self.advance();
+                Ok(Token {
+                    ty: LeftBrace,
+                    range: start..self.index,
+                })
+            }
+            '}' => {
+                self.advance();
+                Ok(Token {
+                    ty: RightBrace,
+                    range: start..self.index,
+                })
+            }
             '|' => {
                 self.advance();
                 Ok(Token {
@@ -281,7 +295,11 @@ impl Lexer {
         }
 
         Ok(Token {
-            ty: Identifier(word.into()),
+            ty: match word.as_str() {
+                "if" => If,
+                "else" => Else,
+                _ => Identifier(word.into()),
+            },
             range: start..self.index,
         })
     }

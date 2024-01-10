@@ -32,6 +32,7 @@ pub enum Node {
     Assignment(Rc<str>, Box<Node>),
     Unary(UnaryOp, Box<Node>),
     Binary(Box<Node>, BinaryOp, Box<Node>),
+    If(Box<Node>, Box<Node>, Option<Box<Node>>),
     FnDef(Rc<str>, Vec<Rc<str>>, Box<Node>),
     Call(Rc<str>, Vec<Node>),
     Statements(Vec<Node>),
@@ -72,6 +73,10 @@ impl fmt::Display for Node {
                     Pow => write!(f, "({} ^ {})", left, right),
                 }
             }
+            Node::If(cond, then, else_case) => match else_case {
+                Some(else_case) => write!(f, "if {} then {} else {}", cond, then, else_case),
+                None => write!(f, "if {} then {}", cond, then),
+            },
             Node::FnDef(name, args, body) => write!(
                 f,
                 "fn {}({}) {{\n  {}\n}}",
