@@ -166,6 +166,32 @@ impl Lexer {
                     range: start..self.index,
                 })
             }
+            '<' => {
+                self.advance();
+                Ok(Token {
+                    ty: match self.current_char {
+                        '=' => {
+                            self.advance();
+                            Lte
+                        }
+                        _ => Lt,
+                    },
+                    range: start..self.index,
+                })
+            }
+            '>' => {
+                self.advance();
+                Ok(Token {
+                    ty: match self.current_char {
+                        '=' => {
+                            self.advance();
+                            Gte
+                        }
+                        _ => Gt,
+                    },
+                    range: start..self.index,
+                })
+            }
             '(' => {
                 self.advance();
                 Ok(Token {
@@ -296,6 +322,9 @@ impl Lexer {
 
         Ok(Token {
             ty: match word.as_str() {
+                "not" => Not,
+                "and" => And,
+                "or" => Or,
                 "if" => If,
                 "else" => Else,
                 _ => Identifier(word.into()),

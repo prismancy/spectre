@@ -97,10 +97,72 @@ impl Parser {
             (Identifier(name), Eq) => {
                 self.advance();
                 self.advance();
-                Ok(Node::Assignment(name, Box::new(self.expr()?)))
+                Ok(Node::Assignment(name, Box::new(self.or_expr()?)))
             }
-            _ => self.arith_expr(),
+            _ => self.or_expr(),
         }
+    }
+
+    fn or_expr(&mut self) -> ParseResult {
+        let result = self.and_expr()?;
+
+        match self.token.ty {
+            Or => {
+                self.advance();
+                Ok(Node::Binary(
+                    Box::new(result),
+                    BinaryOp::Or,
+                    Box::new(self.or_expr()?),
+                ))
+            }
+            _ => Ok(result),
+        }
+    }
+
+    fn and_expr(&mut self) -> ParseResult {
+        let result = self.not_expr()?;
+
+        match self.token.ty {
+            And => {
+                self.advance();
+                Ok(Node::Binary(
+                    Box::new(result),
+                    BinaryOp::And,
+                    Box::new(self.and_expr()?),
+                ))
+            }
+            _ => Ok(result),
+        }
+    }
+
+    fn not_expr(&mut self) -> ParseResult {
+        match self.token.ty {
+            Not => {
+                self.advance();
+                Ok(Node::Unary(UnaryOp::Not, Box::new(self.not_expr()?)))
+            }
+            _ => self.comp_expr(),
+        }
+    }
+
+    fn comp_expr(&mut self) -> ParseResult {
+        let result = self.arith_expr()?;
+
+        macro_rules! comp_expr {
+            ($($token:tt),*) => {
+                match self.token.ty {
+                    $(
+                        $token => {
+                            self.advance();
+                            Ok(Node::Binary(Box::new(result), BinaryOp::$token, Box::new(self.comp_expr()?)))
+                        },
+                    )*
+                    _ => Ok(result),
+                }
+            };
+        }
+
+        comp_expr!(EqEq, Neq, Lt, Lte, Gt, Gte)
     }
 
     fn arith_expr(&mut self) -> ParseResult {
@@ -143,6 +205,15 @@ impl Parser {
                     | Divide
                     | Percent
                     | Carrot
+                    | Not
+                    | EqEq
+                    | Neq
+                    | Lt
+                    | Lte
+                    | Gt
+                    | Gte
+                    | And
+                    | Or
                     | RightParen
                     | LeftBrace
                     | RightBrace
@@ -386,7 +457,6 @@ impl Parser {
     }
 
     fn if_expr(&mut self) -> ParseResult {
-        let start = self.token.range.start;
         self.advance();
 
         let condition = self.expr()?;
@@ -395,7 +465,7 @@ impl Parser {
             return self.error(
                 "expected token".to_string(),
                 format!("expected {}", LeftBrace),
-                start,
+                self.token.range.start,
             );
         }
 
@@ -412,7 +482,6 @@ impl Parser {
     }
 
     fn else_expr(&mut self) -> ParseResult {
-        let start = self.token.range.start;
         self.advance();
 
         match self.token.ty {
@@ -421,7 +490,7 @@ impl Parser {
             _ => self.error(
                 "expected token".to_string(),
                 format!("expected {} or {}", LeftBrace, If),
-                start,
+                self.token.range.start,
             ),
         }
     }
@@ -457,7 +526,6 @@ impl Parser {
     }
 
     fn block(&mut self) -> ParseResult {
-        let start = self.token.range.start;
         self.advance();
 
         let statements = self.statements()?;
@@ -466,7 +534,7 @@ impl Parser {
             return self.error(
                 "expected token".to_string(),
                 format!("expected {}", RightBrace),
-                start,
+                self.token.range.start,
             );
         }
         self.advance();

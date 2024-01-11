@@ -13,6 +13,7 @@ pub enum UnaryOp {
     Cbrt,
     Fort,
     Fact,
+    Not,
 }
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BinaryOp {
@@ -22,6 +23,36 @@ pub enum BinaryOp {
     Div,
     Rem,
     Pow,
+    EqEq,
+    Neq,
+    Lt,
+    Lte,
+    Gt,
+    Gte,
+    And,
+    Or,
+}
+
+impl fmt::Display for BinaryOp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use BinaryOp::*;
+        match self {
+            Add => write!(f, "+"),
+            Sub => write!(f, "-"),
+            Mul => write!(f, "*"),
+            Div => write!(f, "/"),
+            Rem => write!(f, "%"),
+            Pow => write!(f, "^"),
+            EqEq => write!(f, "=="),
+            Neq => write!(f, "!="),
+            Lt => write!(f, "<"),
+            Lte => write!(f, "<="),
+            Gt => write!(f, ">"),
+            Gte => write!(f, ">="),
+            And => write!(f, "and"),
+            Or => write!(f, "or"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -60,19 +91,10 @@ impl fmt::Display for Node {
                     Sqrt => write!(f, "(√{})", node),
                     Cbrt => write!(f, "(∛{})", node),
                     Fort => write!(f, "(∜{})", node),
+                    Not => write!(f, "(not {})", node),
                 }
             }
-            Node::Binary(left, op, right) => {
-                use BinaryOp::*;
-                match op {
-                    Add => write!(f, "({} + {})", left, right),
-                    Sub => write!(f, "({} - {})", left, right),
-                    Mul => write!(f, "({} * {})", left, right),
-                    Div => write!(f, "({} / {})", left, right),
-                    Rem => write!(f, "({} % {})", left, right),
-                    Pow => write!(f, "({} ^ {})", left, right),
-                }
-            }
+            Node::Binary(left, op, right) => write!(f, "({} {} {})", left, op, right),
             Node::If(cond, then, else_case) => match else_case {
                 Some(else_case) => write!(f, "if {} then {} else {}", cond, then, else_case),
                 None => write!(f, "if {} then {}", cond, then),

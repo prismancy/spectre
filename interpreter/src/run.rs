@@ -14,6 +14,7 @@ impl Default for Interpreter {
             scope: Scope::default(),
         };
         interpreter.math();
+        interpreter.io();
         interpreter
     }
 }
@@ -95,6 +96,7 @@ impl Interpreter {
                         Value::Float(x) => Value::Float(x.sqrt().sqrt()),
                         _ => unimplemented!(),
                     },
+                    Not => Value::Bool(!(bool::from(value))),
                 }
             }
             Node::Binary(left, op, right) => {
@@ -295,16 +297,85 @@ impl Interpreter {
                         }
                         (l, r) => panic!("Cannot raise {} to the power of {}", l, r),
                     },
+                    EqEq => Value::Bool(l_value == r_value),
+                    Neq => Value::Bool(l_value != r_value),
+                    Lt => Value::Bool(match (l_value, r_value) {
+                        (Value::Int(a), Value::Int(b)) => a < b,
+                        (Value::Int(a), Value::Float(b)) => (a as f64) < b,
+                        (Value::Int(x), Value::Complex(r, i)) => ((x * x) as f64) < (r * r + i * i),
+                        (Value::Float(a), Value::Int(b)) => a < (b as f64),
+                        (Value::Float(a), Value::Float(b)) => a < b,
+                        (Value::Float(x), Value::Complex(r, i)) => (x * x) < (r * r + i * i),
+                        (Value::Complex(r, i), Value::Int(x)) => (r * r + i * i) < ((x * x) as f64),
+                        (Value::Complex(r, i), Value::Float(x)) => (r * r + i * i) < (x * x),
+                        (Value::Complex(r, i), Value::Complex(r2, i2)) => {
+                            (r * r + i * i) < (r2 * r2 + i2 * i2)
+                        }
+                        (l, r) => panic!("Cannot compare {} {} {}", l, Lt, r),
+                    }),
+                    Lte => Value::Bool(match (l_value, r_value) {
+                        (Value::Int(a), Value::Int(b)) => a <= b,
+                        (Value::Int(a), Value::Float(b)) => (a as f64) <= b,
+                        (Value::Int(x), Value::Complex(r, i)) => {
+                            ((x * x) as f64) <= (r * r + i * i)
+                        }
+                        (Value::Float(a), Value::Int(b)) => a <= (b as f64),
+                        (Value::Float(a), Value::Float(b)) => a <= b,
+                        (Value::Float(x), Value::Complex(r, i)) => (x * x) <= (r * r + i * i),
+                        (Value::Complex(r, i), Value::Int(x)) => {
+                            (r * r + i * i) <= ((x * x) as f64)
+                        }
+                        (Value::Complex(r, i), Value::Float(x)) => (r * r + i * i) <= (x * x),
+                        (Value::Complex(r, i), Value::Complex(r2, i2)) => {
+                            (r * r + i * i) <= (r2 * r2 + i2 * i2)
+                        }
+                        (l, r) => panic!("Cannot compare {} {} {}", l, Lte, r),
+                    }),
+                    Gt => Value::Bool(match (l_value, r_value) {
+                        (Value::Int(a), Value::Int(b)) => a > b,
+                        (Value::Int(a), Value::Float(b)) => (a as f64) > b,
+                        (Value::Int(x), Value::Complex(r, i)) => ((x * x) as f64) > (r * r + i * i),
+                        (Value::Float(a), Value::Int(b)) => a > (b as f64),
+                        (Value::Float(a), Value::Float(b)) => a > b,
+                        (Value::Float(x), Value::Complex(r, i)) => (x * x) > (r * r + i * i),
+                        (Value::Complex(r, i), Value::Int(x)) => (r * r + i * i) > ((x * x) as f64),
+                        (Value::Complex(r, i), Value::Float(x)) => (r * r + i * i) > (x * x),
+                        (Value::Complex(r, i), Value::Complex(r2, i2)) => {
+                            (r * r + i * i) > (r2 * r2 + i2 * i2)
+                        }
+                        (l, r) => panic!("Cannot compare {} {} {}", l, Gt, r),
+                    }),
+                    Gte => Value::Bool(match (l_value, r_value) {
+                        (Value::Int(a), Value::Int(b)) => a >= b,
+                        (Value::Int(a), Value::Float(b)) => (a as f64) >= b,
+                        (Value::Int(x), Value::Complex(r, i)) => {
+                            ((x * x) as f64) >= (r * r + i * i)
+                        }
+                        (Value::Float(a), Value::Int(b)) => a >= (b as f64),
+                        (Value::Float(a), Value::Float(b)) => a >= b,
+                        (Value::Float(x), Value::Complex(r, i)) => (x * x) >= (r * r + i * i),
+                        (Value::Complex(r, i), Value::Int(x)) => {
+                            (r * r + i * i) >= ((x * x) as f64)
+                        }
+                        (Value::Complex(r, i), Value::Float(x)) => (r * r + i * i) >= (x * x),
+                        (Value::Complex(r, i), Value::Complex(r2, i2)) => {
+                            (r * r + i * i) >= (r2 * r2 + i2 * i2)
+                        }
+                        (l, r) => panic!("Cannot compare {} {} {}", l, Gte, r),
+                    }),
+                    And => Value::Bool(l_value.into() && r_value.into()),
+                    Or => Value::Bool(l_value.into() || r_value.into()),
                 }
             }
             Node::If(cond, then, else_case) => {
                 let cond = self.visit(*cond);
-                match cond {
-                    Value::Int(0) => match else_case {
+                if bool::from(cond) {
+                    self.visit(*then)
+                } else {
+                    match else_case {
                         Some(else_case) => self.visit(*else_case),
                         None => Value::Int(0),
-                    },
-                    _ => self.visit(*then),
+                    }
                 }
             }
             Node::FnDef(name, arg_names, node) => {
