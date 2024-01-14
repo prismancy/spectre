@@ -378,6 +378,13 @@ impl Interpreter {
                     }
                 }
             }
+            Node::While(cond, body) => {
+                let mut rtn_value = Value::Int(0);
+                while bool::from(self.visit(*cond.clone())) {
+                    rtn_value = self.visit(*body.clone());
+                }
+                rtn_value
+            }
             Node::FnDef(name, arg_names, node) => {
                 self.scope
                     .set(Rc::clone(&name), Value::Function(name, arg_names, node));

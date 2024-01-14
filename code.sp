@@ -1,7 +1,6 @@
-x = 5
+x = 1
 
-if x < 4 {
-  3
-} else {
-  7
+while x <= 10 {
+  print(x)
+  x = x + 1
 }

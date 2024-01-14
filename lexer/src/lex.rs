@@ -327,6 +327,7 @@ impl Lexer {
                 "or" => Or,
                 "if" => If,
                 "else" => Else,
+                "while" => While,
                 _ => Identifier(word.into()),
             },
             range: start..self.index,

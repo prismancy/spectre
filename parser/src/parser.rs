@@ -444,6 +444,7 @@ impl Parser {
                 Ok(Node::Unary(UnaryOp::Ceil, Box::new(result)))
             }
             If => self.if_expr(),
+            While => self.while_expr(),
             EOF => Ok(Node::Eof),
             _ => self.error(
                 "expected token".to_string(),
@@ -493,6 +494,24 @@ impl Parser {
                 self.token.range.start,
             ),
         }
+    }
+
+    fn while_expr(&mut self) -> ParseResult {
+        self.advance();
+
+        let condition = self.expr()?;
+
+        if self.token.ty != LeftBrace {
+            return self.error(
+                "expected token".to_string(),
+                format!("expected {}", LeftBrace),
+                self.token.range.start,
+            );
+        }
+
+        let body = self.block()?;
+
+        Ok(Node::While(Box::new(condition), Box::new(body)))
     }
 
     fn list(&mut self, start: usize, end: TokenType) -> Result<Vec<Node>, SpectreError> {

@@ -42,6 +42,7 @@ pub enum TokenType {
     Comma,
     If,
     Else,
+    While,
     Newline,
     EOF,
 }
@@ -98,6 +99,7 @@ impl fmt::Display for TokenType {
             Comma => write!(f, "','"),
             If => write!(f, "'if'"),
             Else => write!(f, "'else'"),
+            While => write!(f, "'while'"),
             Newline => write!(f, "'\\n'"),
             EOF => write!(f, "<eof>"),
         }
