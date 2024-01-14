@@ -105,10 +105,17 @@ impl Lexer {
             }
             '/' => {
                 self.advance();
-                Ok(Token {
-                    ty: Slash,
-                    range: start..self.index,
-                })
+                if self.current_char == '/' {
+                    while self.current_char != '\n' {
+                        self.advance();
+                    }
+                    self.next_token()
+                } else {
+                    Ok(Token {
+                        ty: Slash,
+                        range: start..self.index,
+                    })
+                }
             }
             '÷' => {
                 self.advance();
