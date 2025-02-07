@@ -3,7 +3,7 @@
   "displayName": "Spectre",
   "description": "Spectre: a math-based language",
   "version": "0.0.1",
-  "publisher": "iz7n",
+  "publisher": "prismancy",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -41,3 +41,4 @@
     ]
   }
 }
+
